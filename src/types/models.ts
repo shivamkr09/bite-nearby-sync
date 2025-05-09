@@ -4,7 +4,9 @@ import { Database } from "@/integrations/supabase/types";
 
 // Export database-related types
 export type ProfileType = Database['public']['Tables']['profiles']['Row'];
-export type RestaurantType = Database['public']['Tables']['restaurants']['Row'];
+export type RestaurantType = Database['public']['Tables']['restaurants']['Row'] & {
+  distance?: number;
+};
 export type MenuItemType = Database['public']['Tables']['menu_items']['Row'];
 export type OrderType = Database['public']['Tables']['orders']['Row'];
 export type OrderItemType = Database['public']['Tables']['order_items']['Row'];
@@ -32,6 +34,5 @@ export type CartItemType = MenuItemType & {
 export type RestaurantDetailsType = RestaurantType & {
   menu: MenuItemType[];
   categories: string[];
-  distance?: number;
   imageUrl?: string;
 };

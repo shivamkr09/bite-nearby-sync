@@ -234,7 +234,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Ensure proper typing of all fields
         ordersWithItems.push({
           ...order,
-          status: order.status as OrderStatus,
+          status: order.status as OrderStatus, // Cast to OrderStatus type
           items: orderItems
         });
       }

@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Switch } from "@/components/ui/switch";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { Label } from "@/components/ui/label";
-import { RestaurantType } from "@/types/supabase";
+import { RestaurantType } from "@/types/models";
+import { useNavigate } from "react-router-dom";
 
 interface RestaurantManagementCardProps {
   restaurant: RestaurantType;
@@ -14,10 +15,15 @@ interface RestaurantManagementCardProps {
 const RestaurantManagementCard = ({ restaurant }: RestaurantManagementCardProps) => {
   const [isOpen, setIsOpen] = useState(restaurant.is_open);
   const { updateRestaurantStatus } = useRestaurant();
+  const navigate = useNavigate();
 
   const handleStatusChange = (checked: boolean) => {
     setIsOpen(checked);
     updateRestaurantStatus(restaurant.id, checked);
+  };
+
+  const handleManageMenu = () => {
+    navigate('/vendor/menu');
   };
 
   return (
@@ -63,7 +69,7 @@ const RestaurantManagementCard = ({ restaurant }: RestaurantManagementCardProps)
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
         <Button variant="outline">Edit Details</Button>
-        <Button>Manage Menu</Button>
+        <Button onClick={handleManageMenu}>Manage Menu</Button>
       </CardFooter>
     </Card>
   );

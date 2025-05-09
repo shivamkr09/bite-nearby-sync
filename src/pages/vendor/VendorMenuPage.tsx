@@ -53,7 +53,7 @@ const VendorMenuPage = () => {
             </Select>
           </div>
           
-          {selectedRestaurantId && <MenuManagement />}
+          {selectedRestaurantId && <MenuManagement restaurantId={selectedRestaurantId} />}
         </>
       ) : (
         <Card>

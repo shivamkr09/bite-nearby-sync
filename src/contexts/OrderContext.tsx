@@ -9,13 +9,12 @@ import {
   OrderItemType,
   AvailabilityRequestType,
   AvailabilityRequestWithItems,
-  CartItemType,
+  CartItemType as CartItem,
   OrderStatus
 } from "@/types/models";
 
-export type CartItemType = MenuItemType & {
-  quantity: number;
-};
+// Rename to avoid conflict with imported type
+export type CartItemType = CartItem;
 
 type OrderContextType = {
   cart: CartItemType[];
@@ -163,7 +162,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setAvailabilityResponse(null);
   };
 
-  const sendAvailabilityRequest = async (estimatedTimeQuery: string) => {
+  const sendAvailabilityRequest = async (estimatedTimeQuery: string): Promise<void> => {
     if (!user || !currentRestaurantId) {
       toast({
         variant: "destructive",
@@ -260,7 +259,8 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         )
         .subscribe();
       
-      // Remove the cleanup function to solve the Promise<() => void> issue
+      // Return void instead of a cleanup function
+      return;
     } catch (error) {
       console.error('Error sending availability request:', error);
       toast({
