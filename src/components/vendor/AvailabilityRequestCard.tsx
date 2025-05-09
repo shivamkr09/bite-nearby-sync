@@ -3,12 +3,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { AvailabilityRequestType } from "@/contexts/OrderContext";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { formatDistanceToNow } from "date-fns";
+import { AvailabilityRequestWithItems } from "@/types/supabase";
 
 interface AvailabilityRequestCardProps {
-  request: AvailabilityRequestType;
+  request: AvailabilityRequestWithItems;
 }
 
 const AvailabilityRequestCard = ({ request }: AvailabilityRequestCardProps) => {
@@ -26,14 +26,14 @@ const AvailabilityRequestCard = ({ request }: AvailabilityRequestCardProps) => {
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Availability Request</CardTitle>
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}
+            {formatDistanceToNow(new Date(request.created_at), { addSuffix: true })}
           </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <h4 className="text-sm font-medium">Customer</h4>
-          <p className="text-sm">{request.customerName}</p>
+          <p className="text-sm">{request.customer_id}</p>
         </div>
         
         <div>
@@ -42,9 +42,11 @@ const AvailabilityRequestCard = ({ request }: AvailabilityRequestCardProps) => {
             {request.items.map((item) => (
               <li key={item.id} className="flex justify-between">
                 <span>
-                  {item.quantity}x {item.name}
+                  {item.quantity}x {item.menu_item?.name}
                 </span>
-                <span className="text-muted-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="text-muted-foreground">
+                  ${((item.menu_item?.price || 0) * item.quantity).toFixed(2)}
+                </span>
               </li>
             ))}
           </ul>
@@ -52,7 +54,7 @@ const AvailabilityRequestCard = ({ request }: AvailabilityRequestCardProps) => {
         
         <div>
           <h4 className="text-sm font-medium">Customer asks</h4>
-          <p className="text-sm italic">"{request.estimatedTimeQuery}"</p>
+          <p className="text-sm italic">"{request.estimated_time_query}"</p>
         </div>
         
         <div className="space-y-2">

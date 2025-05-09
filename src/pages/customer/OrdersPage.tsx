@@ -2,14 +2,17 @@
 import { useEffect } from "react";
 import OrderStatusCard from "@/components/customer/OrderStatusCard";
 import { useOrder } from "@/contexts/OrderContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const OrdersPage = () => {
-  const { orders } = useOrder();
+  const { orders, fetchOrders } = useOrder();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // This would fetch orders from Supabase
-    // In this initial version, we're using mock data from context
-  }, []);
+    if (user) {
+      fetchOrders();
+    }
+  }, [user, fetchOrders]);
 
   return (
     <div className="py-6">

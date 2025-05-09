@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextType = {
   session: Session | null;
@@ -25,22 +26,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // This would typically be implemented with the Supabase client
-    // We'll implement this after connecting to Supabase
-    console.log("Auth provider initialized");
-    setIsLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserType(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchUserType(session.user.id);
+      } else {
+        setUserType(null);
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+  
+  const fetchUserType = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching user type:', error);
+        setIsLoading(false);
+        return;
+      }
+      
+      setUserType(data.user_type as 'customer' | 'vendor');
+    } catch (error) {
+      console.error('Error fetching user type:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const signUp = async (email: string, password: string, userType: 'customer' | 'vendor', userData: any) => {
     try {
       setIsLoading(true);
-      // This would typically be implemented with the Supabase client
-      // We'll implement this after connecting to Supabase
-      console.log("Sign up:", { email, userType, userData });
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            user_type: userType,
+            first_name: userData.firstName || '',
+            last_name: userData.lastName || '',
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
       toast({
         title: "Account created successfully",
         description: "Please check your email for verification",
       });
+      
       navigate('/signin');
     } catch (error: any) {
       toast({
@@ -56,24 +114,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // This would typically be implemented with the Supabase client
-      // We'll implement this after connecting to Supabase
-      console.log("Sign in:", { email });
       
-      // Mock successful sign in
-      const mockUser = { id: '123', email };
-      const mockUserType = email.includes('vendor') ? 'vendor' : 'customer';
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      setUser(mockUser as User);
-      setUserType(mockUserType as 'customer' | 'vendor');
+      if (error) throw error;
+      
       toast({
         title: "Signed in successfully",
       });
       
-      if (mockUserType === 'customer') {
-        navigate('/customer/restaurants');
-      } else {
-        navigate('/vendor/dashboard');
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profile?.user_type === 'vendor') {
+          navigate('/vendor/dashboard');
+        } else {
+          navigate('/customer/restaurants');
+        }
       }
     } catch (error: any) {
       toast({
@@ -89,14 +153,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
-      // This would typically be implemented with the Supabase client
-      // We'll implement this after connecting to Supabase
+      
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
       setUser(null);
       setUserType(null);
       setSession(null);
+      
       toast({
         title: "Signed out successfully",
       });
+      
       navigate('/');
     } catch (error: any) {
       toast({

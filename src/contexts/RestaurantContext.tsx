@@ -1,22 +1,15 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useLocation } from '@/contexts/LocationContext';
-import { AvailabilityRequestType, OrderType, MenuItemType } from '@/contexts/OrderContext';
-
-export type RestaurantType = {
-  id: string;
-  name: string;
-  address: string;
-  description: string;
-  imageUrl?: string;
-  latitude: number;
-  longitude: number;
-  distance?: number; // distance in km
-  ownerId: string;
-  isOpen: boolean;
-  rating?: number;
-};
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from "@/integrations/supabase/client";
+import {
+  RestaurantType,
+  MenuItemType,
+  OrderWithItems,
+  AvailabilityRequestWithItems
+} from "@/types/supabase";
 
 export type RestaurantDetailsType = RestaurantType & {
   menu: MenuItemType[];
@@ -30,12 +23,12 @@ type RestaurantContextType = {
   fetchRestaurantDetails: (id: string) => Promise<void>;
   isRestaurantOpen: (id: string) => boolean;
   vendorRestaurants: RestaurantType[];
-  vendorOrders: OrderType[];
-  availabilityRequests: AvailabilityRequestType[];
+  vendorOrders: OrderWithItems[];
+  availabilityRequests: AvailabilityRequestWithItems[];
   fetchVendorRestaurants: () => Promise<void>;
   fetchVendorOrders: () => Promise<void>;
   fetchVendorAvailabilityRequests: () => Promise<void>;
-  updateOrderStatus: (orderId: string, status: OrderType['status']) => Promise<void>;
+  updateOrderStatus: (orderId: string, status: string) => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
   updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>;
 };
@@ -46,9 +39,10 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [restaurants, setRestaurants] = useState<RestaurantType[]>([]);
   const [restaurantDetails, setRestaurantDetails] = useState<RestaurantDetailsType | null>(null);
   const [vendorRestaurants, setVendorRestaurants] = useState<RestaurantType[]>([]);
-  const [vendorOrders, setVendorOrders] = useState<OrderType[]>([]);
-  const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequestType[]>([]);
+  const [vendorOrders, setVendorOrders] = useState<OrderWithItems[]>([]);
+  const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequestWithItems[]>([]);
   const { userLocation } = useLocation();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   // Calculate distance between two coordinates in km
@@ -74,54 +68,19 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
     
     try {
-      // This would connect to Supabase
-      // Mock data for now
-      const mockRestaurants: RestaurantType[] = [
-        {
-          id: "rest_1",
-          name: "Tasty Bites",
-          address: "123 Main St, Cityville",
-          description: "Delicious fast food and snacks",
-          latitude: userLocation.latitude + 0.003,
-          longitude: userLocation.longitude - 0.002,
-          ownerId: "owner_1",
-          isOpen: true,
-          rating: 4.5,
-          imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=3270&auto=format&fit=crop"
-        },
-        {
-          id: "rest_2",
-          name: "Pizza Paradise",
-          address: "456 Oak Ave, Townsburg",
-          description: "Authentic Italian pizzas",
-          latitude: userLocation.latitude - 0.002,
-          longitude: userLocation.longitude + 0.004,
-          ownerId: "owner_2",
-          isOpen: true,
-          rating: 4.2,
-          imageUrl: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?q=80&w=3270&auto=format&fit=crop"
-        },
-        {
-          id: "rest_3",
-          name: "Sushi Station",
-          address: "789 Elm St, Villagetown",
-          description: "Fresh and authentic Japanese cuisine",
-          latitude: userLocation.latitude + 0.005,
-          longitude: userLocation.longitude + 0.001,
-          ownerId: "owner_3",
-          isOpen: false,
-          rating: 4.8,
-          imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=3270&auto=format&fit=crop"
-        }
-      ];
-
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*');
+      
+      if (error) throw error;
+      
       // Calculate distance for each restaurant
-      const restaurantsWithDistance = mockRestaurants.map(restaurant => {
+      const restaurantsWithDistance = data.map(restaurant => {
         const distance = calculateDistance(
           userLocation.latitude, 
           userLocation.longitude,
-          restaurant.latitude,
-          restaurant.longitude
+          Number(restaurant.latitude),
+          Number(restaurant.longitude)
         );
         
         return {
@@ -130,9 +89,9 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         };
       });
 
-      // Filter restaurants within 1km and sort by distance
+      // Filter restaurants within 5km and sort by distance
       const nearbyRestaurants = restaurantsWithDistance
-        .filter(r => r.distance <= 1)
+        .filter(r => r.distance <= 5)
         .sort((a, b) => (a.distance || 0) - (b.distance || 0));
       
       setRestaurants(nearbyRestaurants);
@@ -140,7 +99,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (nearbyRestaurants.length === 0) {
         toast({
           title: "No restaurants found",
-          description: "No restaurants found within 1km of your location",
+          description: "No restaurants found within 5km of your location",
           variant: "destructive"
         });
       } else {
@@ -161,68 +120,29 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const fetchRestaurantDetails = async (id: string) => {
     try {
-      // This would connect to Supabase
-      // Mock data for now
-      const mockMenu: MenuItemType[] = [
-        {
-          id: "item_1",
-          name: "Classic Burger",
-          description: "Beef patty with lettuce, tomato, and special sauce",
-          price: 8.99,
-          isAvailable: true,
-          category: "Burgers",
-          restaurantId: id
-        },
-        {
-          id: "item_2",
-          name: "Cheese Fries",
-          description: "Crispy fries topped with melted cheese",
-          price: 4.99,
-          isAvailable: true,
-          category: "Sides",
-          restaurantId: id
-        },
-        {
-          id: "item_3",
-          name: "Chocolate Milkshake",
-          description: "Creamy chocolate milkshake",
-          price: 3.99,
-          isAvailable: true,
-          category: "Drinks",
-          restaurantId: id
-        },
-        {
-          id: "item_4",
-          name: "Chicken Burger",
-          description: "Grilled chicken with lettuce and mayo",
-          price: 7.99,
-          isAvailable: true,
-          category: "Burgers",
-          restaurantId: id
-        },
-        {
-          id: "item_5",
-          name: "Onion Rings",
-          description: "Crispy battered onion rings",
-          price: 3.99,
-          isAvailable: true,
-          category: "Sides",
-          restaurantId: id
-        }
-      ];
+      // Fetch the restaurant
+      const { data: restaurant, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('id', id)
+        .single();
       
-      const restaurant = restaurants.find(r => r.id === id);
+      if (restaurantError) throw restaurantError;
       
-      if (!restaurant) {
-        throw new Error("Restaurant not found");
-      }
+      // Fetch menu items
+      const { data: menu, error: menuError } = await supabase
+        .from('menu_items')
+        .select('*')
+        .eq('restaurant_id', id);
+      
+      if (menuError) throw menuError;
       
       // Get unique categories
-      const categories = Array.from(new Set(mockMenu.map(item => item.category)));
+      const categories = Array.from(new Set(menu.map(item => item.category)));
       
       const details: RestaurantDetailsType = {
         ...restaurant,
-        menu: mockMenu,
+        menu,
         categories
       };
       
@@ -239,29 +159,21 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const isRestaurantOpen = (id: string) => {
     const restaurant = restaurants.find(r => r.id === id);
-    return restaurant?.isOpen || false;
+    return restaurant?.is_open || false;
   };
 
   const fetchVendorRestaurants = async () => {
+    if (!user) return;
+    
     try {
-      // This would connect to Supabase
-      // Mock data for now
-      const mockRestaurants: RestaurantType[] = [
-        {
-          id: "rest_1",
-          name: "Tasty Bites",
-          address: "123 Main St, Cityville",
-          description: "Delicious fast food and snacks",
-          latitude: 37.7749,
-          longitude: -122.4194,
-          ownerId: "mock-vendor-id",
-          isOpen: true,
-          rating: 4.5,
-          imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=3270&auto=format&fit=crop"
-        }
-      ];
+      const { data, error } = await supabase
+        .from('restaurants')
+        .select('*')
+        .eq('owner_id', user.id);
       
-      setVendorRestaurants(mockRestaurants);
+      if (error) throw error;
+      
+      setVendorRestaurants(data);
     } catch (error) {
       console.error("Error fetching vendor restaurants:", error);
       toast({
@@ -273,75 +185,50 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const fetchVendorOrders = async () => {
+    if (!user) return;
+    
     try {
-      // This would connect to Supabase
-      // Mock data for now
-      const mockOrders: OrderType[] = [
-        {
-          id: "order_1",
-          items: [
-            {
-              id: "item_1",
-              name: "Classic Burger",
-              description: "Beef patty with lettuce, tomato, and special sauce",
-              price: 8.99,
-              quantity: 2,
-              isAvailable: true,
-              category: "Burgers",
-              restaurantId: "rest_1"
-            },
-            {
-              id: "item_2",
-              name: "Cheese Fries",
-              description: "Crispy fries topped with melted cheese",
-              price: 4.99,
-              quantity: 1,
-              isAvailable: true,
-              category: "Sides",
-              restaurantId: "rest_1"
-            }
-          ],
-          total: 22.97,
-          customerName: "John Doe",
-          customerId: "customer_1",
-          restaurantId: "rest_1",
-          restaurantName: "Tasty Bites",
-          status: 'new',
-          estimatedTime: "30-45 minutes",
-          createdAt: new Date(Date.now() - 10 * 60000), // 10 minutes ago
-          updatedAt: new Date(Date.now() - 10 * 60000),
-          address: "123 Customer St, Cityville",
-          phone: "555-123-4567"
-        },
-        {
-          id: "order_2",
-          items: [
-            {
-              id: "item_3",
-              name: "Chocolate Milkshake",
-              description: "Creamy chocolate milkshake",
-              price: 3.99,
-              quantity: 1,
-              isAvailable: true,
-              category: "Drinks",
-              restaurantId: "rest_1"
-            }
-          ],
-          total: 3.99,
-          customerName: "Jane Smith",
-          customerId: "customer_2",
-          restaurantId: "rest_1",
-          restaurantName: "Tasty Bites",
-          status: 'cooking',
-          estimatedTime: "10-15 minutes",
-          createdAt: new Date(Date.now() - 30 * 60000), // 30 minutes ago
-          updatedAt: new Date(Date.now() - 25 * 60000), // 25 minutes ago
-          address: "456 Customer Ave, Townsburg",
-          phone: "555-987-6543"
-        }
-      ];
+      // Get vendor restaurant ids
+      const { data: restaurants, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('owner_id', user.id);
       
-      setVendorOrders(mockOrders);
+      if (restaurantError) throw restaurantError;
+      
+      if (!restaurants.length) {
+        setVendorOrders([]);
+        return;
+      }
+      
+      const restaurantIds = restaurants.map(r => r.id);
+      
+      // Fetch orders for these restaurants
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*')
+        .in('restaurant_id', restaurantIds)
+        .order('created_at', { ascending: false });
+      
+      if (ordersError) throw ordersError;
+      
+      const ordersWithItems: OrderWithItems[] = [];
+      
+      for (const order of ordersData) {
+        const { data: orderItems, error: itemsError } = await supabase
+          .from('order_items')
+          .select('*, menu_item:menu_items(*)')
+          .eq('order_id', order.id);
+        
+        if (itemsError) throw itemsError;
+        
+        ordersWithItems.push({
+          ...order,
+          items: orderItems
+        });
+      }
+      
+      setVendorOrders(ordersWithItems);
     } catch (error) {
       console.error("Error fetching vendor orders:", error);
       toast({
@@ -353,34 +240,51 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const fetchVendorAvailabilityRequests = async () => {
+    if (!user) return;
+    
     try {
-      // This would connect to Supabase
-      // Mock data for now
-      const mockRequests: AvailabilityRequestType[] = [
-        {
-          id: "req_1",
-          items: [
-            {
-              id: "item_1",
-              name: "Classic Burger",
-              description: "Beef patty with lettuce, tomato, and special sauce",
-              price: 8.99,
-              quantity: 1,
-              isAvailable: true,
-              category: "Burgers",
-              restaurantId: "rest_1"
-            }
-          ],
-          estimatedTimeQuery: "How long will my order take?",
-          customerName: "Alice Johnson",
-          customerId: "customer_3",
-          restaurantId: "rest_1",
-          createdAt: new Date(),
-          status: 'pending'
-        }
-      ];
+      // Get vendor restaurant ids
+      const { data: restaurants, error: restaurantError } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('owner_id', user.id);
       
-      setAvailabilityRequests(mockRequests);
+      if (restaurantError) throw restaurantError;
+      
+      if (!restaurants.length) {
+        setAvailabilityRequests([]);
+        return;
+      }
+      
+      const restaurantIds = restaurants.map(r => r.id);
+      
+      // Fetch requests for these restaurants
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('availability_requests')
+        .select('*')
+        .in('restaurant_id', restaurantIds)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+      
+      if (requestsError) throw requestsError;
+      
+      const requestsWithItems: AvailabilityRequestWithItems[] = [];
+      
+      for (const request of requestsData) {
+        const { data: requestItems, error: itemsError } = await supabase
+          .from('availability_request_items')
+          .select('*, menu_item:menu_items(*)')
+          .eq('request_id', request.id);
+        
+        if (itemsError) throw itemsError;
+        
+        requestsWithItems.push({
+          ...request,
+          items: requestItems
+        });
+      }
+      
+      setAvailabilityRequests(requestsWithItems);
     } catch (error) {
       console.error("Error fetching availability requests:", error);
       toast({
@@ -391,15 +295,22 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: OrderType['status']) => {
+  const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      // This would connect to Supabase
+      const { error } = await supabase
+        .from('orders')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', orderId);
+      
+      if (error) throw error;
+      
+      // Update local state
       const updatedOrders = vendorOrders.map(order => {
         if (order.id === orderId) {
           return {
             ...order,
             status,
-            updatedAt: new Date()
+            updated_at: new Date().toISOString()
           };
         }
         return order;
@@ -423,19 +334,33 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const respondToAvailabilityRequest = async (requestId: string, estimatedTime: string, isAvailable: boolean) => {
     try {
-      // This would connect to Supabase
+      const status = isAvailable ? 'responded' : 'rejected';
+      
+      const { error } = await supabase
+        .from('availability_requests')
+        .update({ 
+          status, 
+          estimated_time: estimatedTime,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', requestId);
+      
+      if (error) throw error;
+      
+      // Update local state
       const updatedRequests = availabilityRequests.map(req => {
         if (req.id === requestId) {
           return {
             ...req,
-            status: 'responded' as const, // Fix: explicitly type as 'responded'
-            estimatedTime
+            status: status as "pending" | "responded" | "rejected",
+            estimated_time: estimatedTime,
+            updated_at: new Date().toISOString()
           };
         }
         return req;
       });
       
-      setAvailabilityRequests(updatedRequests);
+      setAvailabilityRequests(updatedRequests.filter(r => r.status === 'pending'));
       
       toast({
         title: "Response sent",
@@ -455,12 +380,23 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateRestaurantStatus = async (restaurantId: string, isOpen: boolean) => {
     try {
-      // This would connect to Supabase
+      const { error } = await supabase
+        .from('restaurants')
+        .update({ 
+          is_open: isOpen,
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', restaurantId);
+      
+      if (error) throw error;
+      
+      // Update local state
       const updatedRestaurants = vendorRestaurants.map(restaurant => {
         if (restaurant.id === restaurantId) {
           return {
             ...restaurant,
-            isOpen
+            is_open: isOpen,
+            updated_at: new Date().toISOString()
           };
         }
         return restaurant;
@@ -481,6 +417,49 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
     }
   };
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (user) {
+      // Set up real-time subscriptions for orders and availability requests
+      const ordersChannel = supabase
+        .channel('orders-channel')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'orders'
+          },
+          () => {
+            // Refetch orders on update
+            fetchVendorOrders();
+          }
+        )
+        .subscribe();
+        
+      const requestsChannel = supabase
+        .channel('requests-channel')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'availability_requests'
+          },
+          () => {
+            // Refetch availability requests on insert
+            fetchVendorAvailabilityRequests();
+          }
+        )
+        .subscribe();
+        
+      return () => {
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(requestsChannel);
+      };
+    }
+  }, [user]);
 
   return (
     <RestaurantContext.Provider

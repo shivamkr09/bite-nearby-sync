@@ -6,6 +6,7 @@ import AvailabilityRequestCard from "@/components/vendor/AvailabilityRequestCard
 import OrderManagementCard from "@/components/vendor/OrderManagementCard";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const VendorDashboard = () => {
   const { 
@@ -16,12 +17,15 @@ const VendorDashboard = () => {
     fetchVendorOrders,
     fetchVendorAvailabilityRequests
   } = useRestaurant();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchVendorRestaurants();
-    fetchVendorOrders();
-    fetchVendorAvailabilityRequests();
-  }, [fetchVendorRestaurants, fetchVendorOrders, fetchVendorAvailabilityRequests]);
+    if (user) {
+      fetchVendorRestaurants();
+      fetchVendorOrders();
+      fetchVendorAvailabilityRequests();
+    }
+  }, [user, fetchVendorRestaurants, fetchVendorOrders, fetchVendorAvailabilityRequests]);
 
   // Filter for new orders and availability requests
   const newOrders = vendorOrders.filter(order => order.status === 'new');
@@ -53,7 +57,7 @@ const VendorDashboard = () => {
           <CardContent className="pt-4">
             <div className="text-3xl font-bold">{vendorRestaurants.length}</div>
             <p className="text-muted-foreground text-sm">
-              {vendorRestaurants.filter(r => r.isOpen).length} currently open
+              {vendorRestaurants.filter(r => r.is_open).length} currently open
             </p>
           </CardContent>
         </Card>

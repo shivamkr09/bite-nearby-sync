@@ -3,15 +3,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { RestaurantType, useRestaurant } from "@/contexts/RestaurantContext";
+import { useRestaurant } from "@/contexts/RestaurantContext";
 import { Label } from "@/components/ui/label";
+import { RestaurantType } from "@/types/supabase";
 
 interface RestaurantManagementCardProps {
   restaurant: RestaurantType;
 }
 
 const RestaurantManagementCard = ({ restaurant }: RestaurantManagementCardProps) => {
-  const [isOpen, setIsOpen] = useState(restaurant.isOpen);
+  const [isOpen, setIsOpen] = useState(restaurant.is_open);
   const { updateRestaurantStatus } = useRestaurant();
 
   const handleStatusChange = (checked: boolean) => {
@@ -26,9 +27,9 @@ const RestaurantManagementCard = ({ restaurant }: RestaurantManagementCardProps)
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="h-40 bg-secondary rounded-md overflow-hidden">
-          {restaurant.imageUrl ? (
+          {restaurant.image_url ? (
             <img 
-              src={restaurant.imageUrl} 
+              src={restaurant.image_url} 
               alt={restaurant.name} 
               className="h-full w-full object-cover" 
             />
