@@ -428,7 +428,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (req.id === requestId) {
           return {
             ...req,
-            status: 'responded',
+            status: 'responded' as const, // Fix: explicitly type as 'responded'
             estimatedTime
           };
         }

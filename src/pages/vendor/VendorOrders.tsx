@@ -13,7 +13,7 @@ const VendorOrders = () => {
     fetchVendorOrders();
   }, [fetchVendorOrders]);
   
-  const getFilteredOrders = (status?: OrderType['status']) => {
+  const getFilteredOrders = (status?: OrderType['status'] | "all") => {
     if (!status || status === "all") {
       return vendorOrders;
     }
@@ -36,9 +36,9 @@ const VendorOrders = () => {
         
         {["all", "new", "cooking", "ready", "dispatched", "delivered"].map((tab) => (
           <TabsContent key={tab} value={tab} className="mt-4">
-            {getFilteredOrders(tab as OrderType['status']).length > 0 ? (
+            {getFilteredOrders(tab as OrderType['status'] | "all").length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {getFilteredOrders(tab as OrderType['status']).map((order) => (
+                {getFilteredOrders(tab as OrderType['status'] | "all").map((order) => (
                   <OrderManagementCard key={order.id} order={order} />
                 ))}
               </div>
