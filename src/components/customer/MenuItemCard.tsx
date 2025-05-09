@@ -1,7 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useOrder, MenuItemType } from "@/contexts/OrderContext";
+import { useOrder } from "@/contexts/OrderContext";
+import { MenuItemType } from "@/types/models";
 
 interface MenuItemCardProps {
   item: MenuItemType;
@@ -9,7 +10,7 @@ interface MenuItemCardProps {
 }
 
 const MenuItemCard = ({ item, restaurantId }: MenuItemCardProps) => {
-  const { name, description, price, isAvailable } = item;
+  const { name, description, price, is_available } = item;
   const { addToCart } = useOrder();
 
   const handleAddToCart = () => {
@@ -17,7 +18,7 @@ const MenuItemCard = ({ item, restaurantId }: MenuItemCardProps) => {
   };
 
   return (
-    <Card className={`overflow-hidden ${!isAvailable ? 'opacity-60' : ''}`}>
+    <Card className={`overflow-hidden ${!is_available ? 'opacity-60' : ''}`}>
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -28,7 +29,7 @@ const MenuItemCard = ({ item, restaurantId }: MenuItemCardProps) => {
           <div className="ml-4">
             <Button 
               onClick={handleAddToCart}
-              disabled={!isAvailable}
+              disabled={!is_available}
               variant="outline"
               size="sm"
               className="whitespace-nowrap"

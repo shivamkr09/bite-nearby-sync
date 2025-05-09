@@ -1,5 +1,5 @@
 
-import { OrderType } from "@/contexts/OrderContext";
+import { OrderType } from "@/types/models";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 
@@ -8,7 +8,7 @@ interface OrderStatusCardProps {
 }
 
 const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
-  const { id, restaurantName, items, total, status, estimatedTime, createdAt } = order;
+  const { id, restaurant_name, items, total, status, estimated_time, created_at } = order;
   
   const getStatusLabel = () => {
     switch (status) {
@@ -38,9 +38,9 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
     <Card className="mb-4">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">{restaurantName}</CardTitle>
+          <CardTitle className="text-lg">{restaurant_name}</CardTitle>
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(createdAt), { addSuffix: true })}
+            {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
           </span>
         </div>
       </CardHeader>
@@ -49,7 +49,7 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium">{getStatusLabel()}</span>
-              <span className="text-muted-foreground">Est. time: {estimatedTime}</span>
+              <span className="text-muted-foreground">Est. time: {estimated_time}</span>
             </div>
             <div className="w-full bg-secondary rounded-full h-2.5">
               <div 
@@ -62,7 +62,7 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Order #{id.substring(id.length - 6)}</div>
             <div className="text-sm text-muted-foreground">
-              {items.reduce((acc, item) => acc + item.quantity, 0)} items · ${total.toFixed(2)}
+              {items ? items.reduce((acc, item) => acc + item.quantity, 0) : 0} items · ${total.toFixed(2)}
             </div>
           </div>
           

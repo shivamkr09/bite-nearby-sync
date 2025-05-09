@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +8,10 @@ import {
   OrderWithItems,
   OrderItemType,
   AvailabilityRequestType,
-  AvailabilityRequestWithItems
-} from "@/types/supabase";
+  AvailabilityRequestWithItems,
+  CartItemType,
+  OrderStatus
+} from "@/types/models";
 
 export type CartItemType = MenuItemType & {
   quantity: number;
@@ -259,10 +260,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         )
         .subscribe();
       
-      // Clean up subscription when component unmounts
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      // Remove the cleanup function to solve the Promise<() => void> issue
     } catch (error) {
       console.error('Error sending availability request:', error);
       toast({

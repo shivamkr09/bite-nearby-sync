@@ -7,13 +7,10 @@ import {
   RestaurantType,
   MenuItemType,
   OrderWithItems,
-  AvailabilityRequestWithItems
-} from "@/types/supabase";
-
-export type RestaurantDetailsType = RestaurantType & {
-  menu: MenuItemType[];
-  categories: string[];
-};
+  AvailabilityRequestWithItems,
+  OrderStatus,
+  RestaurantDetailsType
+} from "@/types/models";
 
 type RestaurantInputType = {
   name: string;
@@ -36,7 +33,7 @@ type RestaurantContextType = {
   fetchVendorRestaurants: () => Promise<void>;
   fetchVendorOrders: () => Promise<void>;
   fetchVendorAvailabilityRequests: () => Promise<void>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<void>;
+  updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
   updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>;
   createRestaurant: (data: RestaurantInputType) => Promise<void>;
@@ -149,10 +146,13 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Get unique categories
       const categories = Array.from(new Set(menu.map(item => item.category)));
       
+      // Create details object with imageUrl and distance properties
       const details: RestaurantDetailsType = {
         ...restaurant,
         menu,
-        categories
+        categories,
+        imageUrl: restaurant.image_url,
+        distance: restaurants.find(r => r.id === id)?.distance
       };
       
       setRestaurantDetails(details);
@@ -231,8 +231,10 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         if (itemsError) throw itemsError;
         
+        // Ensure proper typing of all fields
         ordersWithItems.push({
           ...order,
+          status: order.status as OrderStatus,
           items: orderItems
         });
       }
@@ -304,7 +306,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     try {
       const { error } = await supabase
         .from('orders')
@@ -313,7 +315,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      // Update local state
+      // Update local state with proper typing
       const updatedOrders = vendorOrders.map(order => {
         if (order.id === orderId) {
           return {

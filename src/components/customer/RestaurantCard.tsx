@@ -1,26 +1,26 @@
 
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { RestaurantType } from "@/contexts/RestaurantContext";
+import { RestaurantType } from "@/types/models";
 import { MapPin } from "lucide-react";
 
 const RestaurantCard = ({ restaurant }: { restaurant: RestaurantType }) => {
-  const { id, name, address, description, imageUrl, distance, isOpen, rating } = restaurant;
+  const { id, name, address, description, image_url, distance, is_open, rating } = restaurant;
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <Link to={`/customer/restaurants/${id}`}>
         <div className="relative h-40 w-full bg-secondary">
-          {imageUrl && (
+          {image_url && (
             <img 
-              src={imageUrl} 
+              src={image_url} 
               alt={name} 
               className="h-full w-full object-cover" 
             />
           )}
           <div className="absolute top-2 right-2">
-            <span className={`px-2 py-1 rounded-md text-xs font-semibold ${isOpen ? 'bg-success-500 text-white' : 'bg-destructive text-white'}`}>
-              {isOpen ? 'Open' : 'Closed'}
+            <span className={`px-2 py-1 rounded-md text-xs font-semibold ${is_open ? 'bg-success-500 text-white' : 'bg-destructive text-white'}`}>
+              {is_open ? 'Open' : 'Closed'}
             </span>
           </div>
         </div>
