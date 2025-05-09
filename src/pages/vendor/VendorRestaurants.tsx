@@ -1,9 +1,10 @@
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RestaurantManagementCard from "@/components/vendor/RestaurantManagementCard";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+import CreateRestaurantModal from "@/components/vendor/CreateRestaurantModal";
+import { Button } from "@/components/ui/button";
 
 const VendorRestaurants = () => {
   const { vendorRestaurants, fetchVendorRestaurants } = useRestaurant();
@@ -16,7 +17,7 @@ const VendorRestaurants = () => {
     <div className="py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Your Restaurants</h1>
-        <Button>Add New Restaurant</Button>
+        <CreateRestaurantModal />
       </div>
       
       {vendorRestaurants.length > 0 ? (
@@ -34,7 +35,7 @@ const VendorRestaurants = () => {
             <p className="mb-4">
               You don't have any restaurants yet. Create your first restaurant to start receiving orders.
             </p>
-            <Button>Create Restaurant</Button>
+            <CreateRestaurantModal trigger={<Button>Create Restaurant</Button>} />
           </CardContent>
         </Card>
       )}

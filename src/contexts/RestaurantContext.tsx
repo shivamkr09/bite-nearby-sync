@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useLocation } from '@/contexts/LocationContext';
@@ -16,6 +15,15 @@ export type RestaurantDetailsType = RestaurantType & {
   categories: string[];
 };
 
+type RestaurantInputType = {
+  name: string;
+  address: string;
+  description: string;
+  image_url?: string | null;
+  latitude: number;
+  longitude: number;
+};
+
 type RestaurantContextType = {
   restaurants: RestaurantType[];
   restaurantDetails: RestaurantDetailsType | null;
@@ -31,6 +39,7 @@ type RestaurantContextType = {
   updateOrderStatus: (orderId: string, status: string) => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
   updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>;
+  createRestaurant: (data: RestaurantInputType) => Promise<void>;
 };
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -418,6 +427,48 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
 
+  const createRestaurant = async (data: RestaurantInputType) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication required",
+        description: "Please sign in to create a restaurant"
+      });
+      return;
+    }
+    
+    try {
+      const newRestaurant = {
+        ...data,
+        owner_id: user.id
+      };
+      
+      const { data: restaurant, error } = await supabase
+        .from('restaurants')
+        .insert(newRestaurant)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update the local state
+      setVendorRestaurants(prev => [...prev, restaurant]);
+      
+      toast({
+        title: "Restaurant created",
+        description: "Your restaurant has been created successfully"
+      });
+    } catch (error) {
+      console.error("Error creating restaurant:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create restaurant"
+      });
+      throw error;
+    }
+  };
+
   // Subscribe to real-time updates
   useEffect(() => {
     if (user) {
@@ -477,7 +528,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         fetchVendorAvailabilityRequests,
         updateOrderStatus,
         respondToAvailabilityRequest,
-        updateRestaurantStatus
+        updateRestaurantStatus,
+        createRestaurant
       }}
     >
       {children}
