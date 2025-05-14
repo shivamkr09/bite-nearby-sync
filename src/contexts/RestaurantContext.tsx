@@ -102,18 +102,15 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       setRestaurants(nearbyRestaurants);
       
+      // Only show toast if no restaurants found
       if (nearbyRestaurants.length === 0) {
         toast({
+          variant: "destructive",
           title: "No restaurants found",
-          description: "No restaurants found within 5km of your location",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: `${nearbyRestaurants.length} restaurants found`,
-          description: "Showing restaurants near you"
+          description: "No restaurants found within 5km of your location"
         });
       }
+      // Remove the success toast since LocationContext already shows one
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       toast({
