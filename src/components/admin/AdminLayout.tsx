@@ -2,7 +2,7 @@
 import { Outlet, Link, NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogIn, Menu, User, ShieldCheck } from "lucide-react";
+import { LogIn, Menu, User, ShieldCheck, Users, Store, Bell, FileText } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -10,20 +10,27 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const AdminLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, userType } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Verify admin permission
+  useEffect(() => {
+    if (userType && userType !== 'admin') {
+      navigate('/signin');
+    }
+  }, [userType, navigate]);
+
   const navItems = [
-    { label: "Dashboard", path: "/admin/dashboard" },
-    { label: "Vendors", path: "/admin/vendors" },
-    { label: "Users", path: "/admin/users" },
-    { label: "Orders", path: "/admin/orders" },
-    { label: "Support Tickets", path: "/admin/support" },
-    { label: "Analytics", path: "/admin/analytics" },
+    { label: "Dashboard", path: "/admin/dashboard", icon: <ShieldCheck className="h-4 w-4 mr-2" /> },
+    { label: "Vendors", path: "/admin/vendors", icon: <Store className="h-4 w-4 mr-2" /> },
+    { label: "Users", path: "/admin/users", icon: <Users className="h-4 w-4 mr-2" /> },
+    { label: "Orders", path: "/admin/orders", icon: <Bell className="h-4 w-4 mr-2" /> },
+    { label: "Support Tickets", path: "/admin/support", icon: <Bell className="h-4 w-4 mr-2" /> },
+    { label: "Terms & Conditions", path: "/admin/terms", icon: <FileText className="h-4 w-4 mr-2" /> },
   ];
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -72,12 +79,13 @@ const AdminLayout = () => {
                             key={item.path}
                             to={item.path}
                             className={({ isActive }) =>
-                              `py-2 px-4 rounded-md ${
+                              `py-2 px-4 rounded-md flex items-center ${
                                 isActive ? "bg-primary/10 text-primary" : "hover:bg-secondary"
                               }`
                             }
                             onClick={closeMenu}
                           >
+                            {item.icon}
                             {item.label}
                           </NavLink>
                         ))}

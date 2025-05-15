@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+type UserType = 'customer' | 'vendor' | 'admin' | null;
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
-  userType: 'customer' | 'vendor' | null;
+  userType: UserType;
   isLoading: boolean;
-  signUp: (email: string, password: string, userType: 'customer' | 'vendor', userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userType: 'customer' | 'vendor' | 'admin', userData: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -20,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userType, setUserType] = useState<'customer' | 'vendor' | null>(null);
+  const [userType, setUserType] = useState<UserType>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -68,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      setUserType(data.user_type as 'customer' | 'vendor');
+      setUserType(data.user_type as UserType);
     } catch (error) {
       console.error('Error fetching user type:', error);
     } finally {
@@ -76,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, userType: 'customer' | 'vendor', userData: any) => {
+  const signUp = async (email: string, password: string, userType: 'customer' | 'vendor' | 'admin', userData: any) => {
     try {
       setIsLoading(true);
       
@@ -86,8 +88,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         options: {
           data: {
             user_type: userType,
-            first_name: userData.firstName || '',
-            last_name: userData.lastName || '',
+            first_name: userData.name?.split(' ')[0] || '',
+            last_name: userData.name?.split(' ').slice(1).join(' ') || '',
           }
         }
       });
@@ -133,7 +135,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', data.user.id)
           .single();
           
-        if (profile?.user_type === 'vendor') {
+        if (profile?.user_type === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (profile?.user_type === 'vendor') {
           navigate('/vendor/dashboard');
         } else {
           navigate('/customer/restaurants');

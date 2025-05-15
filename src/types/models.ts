@@ -1,3 +1,4 @@
+
 export interface UserType {
   id: string;
   createdAt: string;
@@ -7,7 +8,7 @@ export interface UserType {
   phone_number: string | null;
   updated_at: string | null;
   user_name: string | null;
-  role: 'customer' | 'vendor' | null;
+  role: 'customer' | 'vendor' | 'admin' | null;
 }
 
 export interface RestaurantType {
@@ -58,6 +59,11 @@ export interface OrderType {
   delivery_zip_code: string | null;
   delivery_phone_number: string | null;
   notes: string | null;
+  restaurant_name?: string;
+  customer_name?: string;
+  total?: number;
+  estimated_time?: string;
+  items?: OrderItemType[];
 }
 
 export interface OrderItemType {
@@ -84,4 +90,46 @@ export interface UserTermsAcceptanceType {
   user_id: string;
   terms_id: string;
   accepted_at: string;
+}
+
+export interface VendorApprovalType {
+  id: string;
+  vendor_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  vendor?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export interface SupportTicketType {
+  id: string;
+  user_id: string;
+  subject: string;
+  description: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export interface AnalyticsDataType {
+  id: string;
+  date: string;
+  total_orders: number;
+  total_revenue: number;
+  new_users: number;
+  created_at: string;
+  updated_at: string;
 }

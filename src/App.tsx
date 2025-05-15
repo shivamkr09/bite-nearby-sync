@@ -37,6 +37,8 @@ import VendorMenuPage from "@/pages/vendor/VendorMenuPage";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
+import VendorApprovals from "@/pages/admin/VendorApprovals";
+import TermsAndConditions from "@/pages/admin/TermsAndConditions";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,8 @@ const App = () => (
                     {/* Admin Routes */}
                     <Route path="/admin" element={<AdminLayout />}>
                       <Route path="dashboard" element={<AdminDashboard />} />
+                      <Route path="vendors" element={<VendorApprovals />} />
+                      <Route path="terms" element={<TermsAndConditions />} />
                     </Route>
                     
                     {/* 404 Route */}

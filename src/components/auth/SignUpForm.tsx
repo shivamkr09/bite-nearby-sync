@@ -14,7 +14,7 @@ const SignUpForm = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
-  const [userType, setUserType] = useState<"customer" | "vendor">("customer");
+  const [userType, setUserType] = useState<"customer" | "vendor" | "admin">("customer");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signUp, isLoading } = useAuth();
@@ -107,8 +107,8 @@ const SignUpForm = () => {
             <label className="text-sm font-medium">Account type</label>
             <RadioGroup 
               value={userType} 
-              onValueChange={(value) => setUserType(value as "customer" | "vendor")}
-              className="flex gap-4"
+              onValueChange={(value) => setUserType(value as "customer" | "vendor" | "admin")}
+              className="flex gap-4 flex-wrap"
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="customer" id="customer" />
@@ -117,6 +117,10 @@ const SignUpForm = () => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="vendor" id="vendor" />
                 <Label htmlFor="vendor">Restaurant Owner</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="admin" id="admin" />
+                <Label htmlFor="admin">Admin</Label>
               </div>
             </RadioGroup>
           </div>
