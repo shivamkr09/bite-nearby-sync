@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { TermsAndConditionsType } from "@/types/models";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,7 +47,7 @@ const TermsAcceptanceDialog = ({ userType, onAccepted }: TermsAcceptanceDialogPr
           return;
         }
         
-        setTerms(termsData);
+        setTerms(termsData as TermsAndConditionsType);
         
         // Check if user already accepted these terms
         const { data: acceptanceData, error: acceptanceError } = await supabase

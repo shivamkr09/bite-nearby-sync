@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { MenuItemType } from "@/types/models";
@@ -199,12 +200,29 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
         });
       } else {
         // Create new item
+        if (!menuItem.name || !menuItem.price || !menuItem.category) {
+          toast({
+            variant: "destructive",
+            title: "Missing fields",
+            description: "Please fill in all required fields"
+          });
+          return;
+        }
+        
+        // Ensure we have all required fields
+        const newMenuItem = {
+          restaurant_id: restaurantId,
+          name: menuItem.name,
+          price: menuItem.price,
+          category: menuItem.category,
+          description: menuItem.description || "",
+          is_available: menuItem.is_available !== undefined ? menuItem.is_available : true,
+          image_url: menuItem.image_url || null
+        };
+        
         const { error } = await supabase
           .from('menu_items')
-          .insert({
-            ...menuItem,
-            restaurant_id: restaurantId
-          });
+          .insert(newMenuItem);
         
         if (error) throw error;
         
