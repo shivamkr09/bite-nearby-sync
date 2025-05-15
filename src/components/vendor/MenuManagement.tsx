@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,17 +115,22 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
           
           const columns = rows[i].split(',');
           
+          // Ensure all required fields are provided and properly typed
+          const name = columns[nameIndex].trim();
+          const price = parseFloat(columns[priceIndex]);
+          const category = columns[categoryIndex].trim();
+          
+          if (isNaN(price) || !name || !category) continue;
+          
           const menuItem = {
             restaurant_id: restaurantId,
-            name: columns[nameIndex].trim(),
+            name: name,
+            price: price,
+            category: category,
             description: descriptionIndex !== -1 ? columns[descriptionIndex].trim() : null,
-            price: parseFloat(columns[priceIndex]),
-            category: columns[categoryIndex].trim(),
             is_available: isAvailableIndex !== -1 ? columns[isAvailableIndex].toLowerCase() === 'true' : true,
             image_url: imageUrlIndex !== -1 && columns[imageUrlIndex] ? columns[imageUrlIndex].trim() : null
           };
-          
-          if (isNaN(menuItem.price) || !menuItem.name || !menuItem.category) continue;
           
           menuItems.push(menuItem);
         }

@@ -10,10 +10,12 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { RestaurantProvider } from "@/contexts/RestaurantContext";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Layouts
 import CustomerLayout from "@/components/customer/CustomerLayout";
 import VendorLayout from "@/components/vendor/VendorLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 // Pages
 import Home from "@/pages/Home";
@@ -33,47 +35,57 @@ import VendorOrders from "@/pages/vendor/VendorOrders";
 import VendorRestaurants from "@/pages/vendor/VendorRestaurants";
 import VendorMenuPage from "@/pages/vendor/VendorMenuPage";
 
+// Admin Pages
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
       <TooltipProvider>
-        <AuthProvider>
-          <LocationProvider>
-            <RestaurantProvider>
-              <OrderProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/signin" element={<SignIn />} />
-                  <Route path="/signup" element={<SignUp />} />
-                  
-                  {/* Customer Routes */}
-                  <Route path="/customer" element={<CustomerLayout />}>
-                    <Route path="restaurants" element={<RestaurantsPage />} />
-                    <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
-                    <Route path="cart" element={<CartPage />} />
-                    <Route path="orders" element={<OrdersPage />} />
-                  </Route>
-                  
-                  {/* Vendor Routes */}
-                  <Route path="/vendor" element={<VendorLayout />}>
-                    <Route path="dashboard" element={<VendorDashboard />} />
-                    <Route path="orders" element={<VendorOrders />} />
-                    <Route path="restaurants" element={<VendorRestaurants />} />
-                    <Route path="menu" element={<VendorMenuPage />} />
-                  </Route>
-                  
-                  {/* 404 Route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </OrderProvider>
-            </RestaurantProvider>
-          </LocationProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <LocationProvider>
+              <RestaurantProvider>
+                <OrderProvider>
+                  <Toaster />
+                  <Sonner />
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route path="/" element={<Home />} />
+                    <Route path="/signin" element={<SignIn />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    
+                    {/* Customer Routes */}
+                    <Route path="/customer" element={<CustomerLayout />}>
+                      <Route path="restaurants" element={<RestaurantsPage />} />
+                      <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
+                      <Route path="cart" element={<CartPage />} />
+                      <Route path="orders" element={<OrdersPage />} />
+                    </Route>
+                    
+                    {/* Vendor Routes */}
+                    <Route path="/vendor" element={<VendorLayout />}>
+                      <Route path="dashboard" element={<VendorDashboard />} />
+                      <Route path="orders" element={<VendorOrders />} />
+                      <Route path="restaurants" element={<VendorRestaurants />} />
+                      <Route path="menu" element={<VendorMenuPage />} />
+                    </Route>
+                    
+                    {/* Admin Routes */}
+                    <Route path="/admin" element={<AdminLayout />}>
+                      <Route path="dashboard" element={<AdminDashboard />} />
+                    </Route>
+                    
+                    {/* 404 Route */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </OrderProvider>
+              </RestaurantProvider>
+            </LocationProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </TooltipProvider>
     </BrowserRouter>
   </QueryClientProvider>

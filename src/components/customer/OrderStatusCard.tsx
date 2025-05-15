@@ -8,7 +8,7 @@ interface OrderStatusCardProps {
 }
 
 const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
-  const { id, restaurant_name, items, total, status, estimated_time, created_at } = order;
+  const { id, restaurant_name, total, status, estimated_time, created_at } = order;
   
   const getStatusLabel = () => {
     switch (status) {
@@ -33,6 +33,9 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
       default: return 0;
     }
   };
+
+  // Safely calculate item count
+  const itemCount = order.items ? order.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
 
   return (
     <Card className="mb-4">
@@ -62,7 +65,7 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
           <div className="space-y-1">
             <div className="text-sm font-medium">Order #{id.substring(id.length - 6)}</div>
             <div className="text-sm text-muted-foreground">
-              {items ? items.reduce((acc, item) => acc + item.quantity, 0) : 0} items · ${total.toFixed(2)}
+              {itemCount} items · ${total.toFixed(2)}
             </div>
           </div>
           

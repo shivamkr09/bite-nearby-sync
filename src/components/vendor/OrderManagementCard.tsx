@@ -11,19 +11,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
-import { OrderWithItems } from "@/types/supabase";
+import { OrderWithItems, OrderStatus } from "@/types/models";
 
 interface OrderManagementCardProps {
   order: OrderWithItems;
 }
 
 const OrderManagementCard = ({ order }: OrderManagementCardProps) => {
-  const [status, setStatus] = useState<string>(order.status);
+  const [status, setStatus] = useState<OrderStatus>(order.status as OrderStatus);
   const { updateOrderStatus } = useRestaurant();
 
   const handleStatusChange = (newStatus: string) => {
-    setStatus(newStatus);
-    updateOrderStatus(order.id, newStatus);
+    // Ensure newStatus is of type OrderStatus
+    const typedStatus = newStatus as OrderStatus;
+    setStatus(typedStatus);
+    updateOrderStatus(order.id, typedStatus);
   };
 
   const statusOptions = [

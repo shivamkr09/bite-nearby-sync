@@ -7,6 +7,7 @@ import { useRestaurant } from "@/contexts/RestaurantContext";
 import { Label } from "@/components/ui/label";
 import { RestaurantType } from "@/types/models";
 import { useNavigate } from "react-router-dom";
+import EditRestaurantModal from "./EditRestaurantModal";
 
 interface RestaurantManagementCardProps {
   restaurant: RestaurantType;
@@ -68,7 +69,7 @@ const RestaurantManagementCard = ({ restaurant }: RestaurantManagementCardProps)
         </div>
       </CardContent>
       <CardFooter className="flex justify-end space-x-2">
-        <Button variant="outline">Edit Details</Button>
+        <EditRestaurantModal restaurant={restaurant} />
         <Button onClick={handleManageMenu}>Manage Menu</Button>
       </CardFooter>
     </Card>
