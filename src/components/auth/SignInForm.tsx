@@ -18,7 +18,10 @@ const SignInForm = () => {
     setIsSubmitting(true);
     
     try {
+      console.log("Signing in with email:", email);
       await signIn(email, password);
+    } catch (err) {
+      console.error("Error during sign in:", err);
     } finally {
       setIsSubmitting(false);
     }

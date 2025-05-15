@@ -30,6 +30,11 @@ export interface RestaurantType {
   is_open: boolean | null;
   opening_time: string | null;
   closing_time: string | null;
+  distance?: number;
+}
+
+export interface RestaurantDetailsType extends RestaurantType {
+  menu_items?: MenuItemType[];
 }
 
 export interface MenuItemType {
@@ -52,7 +57,7 @@ export interface OrderType {
   restaurant_id: string;
   order_date: string;
   total_amount: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status: OrderStatus;
   delivery_address: string | null;
   delivery_city: string | null;
   delivery_state: string | null;
@@ -66,6 +71,12 @@ export interface OrderType {
   items?: OrderItemType[];
 }
 
+export interface OrderWithItems extends OrderType {
+  items: OrderItemType[];
+}
+
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+
 export interface OrderItemType {
   id: string;
   created_at: string;
@@ -78,7 +89,7 @@ export interface OrderItemType {
 
 export interface TermsAndConditionsType {
   id: string;
-  type: 'customer' | 'vendor';
+  type: 'customer' | 'vendor' | 'admin';
   content: string;
   version: string;
   published_at: string;
@@ -132,4 +143,30 @@ export interface AnalyticsDataType {
   new_users: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface CartItemType {
+  id: string;
+  menuItem: MenuItemType;
+  quantity: number;
+}
+
+export interface AvailabilityRequestType {
+  id: string;
+  created_at: string;
+  customer_id: string;
+  restaurant_id: string;
+  status: 'pending' | 'approved' | 'rejected';
+  estimated_time_query: string;
+  estimated_time?: string;
+}
+
+export interface AvailabilityRequestWithItems extends AvailabilityRequestType {
+  items: {
+    id: string;
+    menu_item_id: string;
+    quantity: number;
+    menu_item?: MenuItemType;
+  }[];
+  restaurant?: RestaurantType;
 }

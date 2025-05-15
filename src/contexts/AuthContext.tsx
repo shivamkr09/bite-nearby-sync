@@ -12,7 +12,7 @@ type AuthContextType = {
   user: User | null;
   userType: UserType;
   isLoading: boolean;
-  signUp: (email: string, password: string, userType: 'customer' | 'vendor' | 'admin', userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userType: UserType, userData: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -70,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
+      console.log("User profile data:", data);
       setUserType(data.user_type as UserType);
     } catch (error) {
       console.error('Error fetching user type:', error);
@@ -78,9 +79,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string, userType: 'customer' | 'vendor' | 'admin', userData: any) => {
+  const signUp = async (email: string, password: string, userType: UserType, userData: any) => {
     try {
       setIsLoading(true);
+      
+      if (!userType) {
+        throw new Error("User type is required");
+      }
+      
+      console.log("Signing up with user type:", userType);
+      console.log("User data:", userData);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -103,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       navigate('/signin');
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
         variant: "destructive",
         title: "Error signing up",
@@ -135,6 +144,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .eq('id', data.user.id)
           .single();
           
+        console.log("Profile data after signin:", profile);
+        
         if (profile?.user_type === 'admin') {
           navigate('/admin/dashboard');
         } else if (profile?.user_type === 'vendor') {

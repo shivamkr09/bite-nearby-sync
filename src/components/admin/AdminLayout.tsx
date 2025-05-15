@@ -11,18 +11,25 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 const AdminLayout = () => {
   const { user, signOut, userType } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Verify admin permission
   useEffect(() => {
     if (userType && userType !== 'admin') {
+      toast({
+        variant: "destructive",
+        title: "Access Denied",
+        description: "You don't have permission to access the admin area."
+      });
       navigate('/signin');
     }
-  }, [userType, navigate]);
+  }, [userType, navigate, toast]);
 
   const navItems = [
     { label: "Dashboard", path: "/admin/dashboard", icon: <ShieldCheck className="h-4 w-4 mr-2" /> },

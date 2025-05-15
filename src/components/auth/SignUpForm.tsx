@@ -31,6 +31,7 @@ const SignUpForm = () => {
     setIsSubmitting(true);
     
     try {
+      console.log(`Signing up as ${userType} with email: ${email}, name: ${name}`);
       const userData = { name };
       await signUp(email, password, userType, userData);
     } catch (err) {
