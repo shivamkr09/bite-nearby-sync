@@ -31,7 +31,7 @@ export function useRestaurantDetails() {
         [...new Set(menuItems.map(item => item.category))] : 
         [];
 
-      // Ensure all required properties from RestaurantDetailsType are present
+      // Map database fields to our TypeScript types, adding missing properties with null values
       const fullRestaurantDetails: RestaurantDetailsType = {
         ...restaurant,
         city: restaurant.city || null,

@@ -8,6 +8,7 @@ import { MapPin, ArrowLeft, ShoppingCart } from "lucide-react";
 import MenuItemCard from "@/components/customer/MenuItemCard";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { useOrder } from "@/contexts/OrderContext";
+import { RestaurantDetailsType } from "@/types/models";
 
 const RestaurantDetailPage = () => {
   const { id } = useParams<{ id: string }>();

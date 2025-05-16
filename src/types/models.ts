@@ -35,13 +35,16 @@ export interface RestaurantType {
   latitude?: number;
   longitude?: number;
   updated_at?: string;
-}
-
-export interface RestaurantDetailsType extends RestaurantType {
   menu_items?: MenuItemType[];
   categories?: string[];
   imageUrl?: string | null;
   menu?: MenuItemType[];
+}
+
+export interface RestaurantDetailsType extends RestaurantType {
+  menu_items: MenuItemType[];
+  categories: string[];
+  menu: MenuItemType[];
 }
 
 export interface MenuItemType {

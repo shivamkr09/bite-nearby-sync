@@ -30,7 +30,7 @@ export function useNearbyRestaurants() {
           calculatedDistance = Math.sqrt(dx * dx + dy * dy) * 111; // rough conversion to km
         }
         
-        // Ensure all fields from RestaurantType are present
+        // Ensure all fields from RestaurantType are present, including those missing in DB
         const completeRestaurant: RestaurantType = {
           id: restaurant.id,
           created_at: restaurant.created_at,
@@ -53,7 +53,11 @@ export function useNearbyRestaurants() {
           latitude: restaurant.latitude,
           longitude: restaurant.longitude,
           updated_at: restaurant.updated_at,
-          distance: calculatedDistance
+          distance: calculatedDistance,
+          // Add categories and menu_items as empty arrays for consistency
+          categories: [],
+          menu_items: [],
+          menu: []
         };
         
         return completeRestaurant;
