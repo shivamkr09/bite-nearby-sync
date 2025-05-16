@@ -85,7 +85,7 @@ export interface OrderWithItems extends OrderType {
   items: OrderItemType[];
 }
 
-// Update OrderStatus to match all possible statuses used in the app
+// Update OrderStatus to include all possible statuses used in the app
 export type OrderStatus = 'new' | 'confirmed' | 'cooking' | 'ready' | 'dispatched' | 'delivered' | 'cancelled' | 'pending' | 'preparing';
 
 export interface OrderItemType {

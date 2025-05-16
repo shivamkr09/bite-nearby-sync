@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -141,7 +140,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       // Ensure status is valid for the database schema
       // Map any non-database statuses to the appropriate database status
-      let dbStatus: string = status;
+      let dbStatus: OrderStatus = status;
       
       // Convert pending or preparing to new if needed for database compatibility
       if (status === 'pending' || status === 'preparing') dbStatus = 'new';
