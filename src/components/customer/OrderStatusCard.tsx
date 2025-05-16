@@ -1,5 +1,5 @@
 
-import { OrderType } from "@/types/models";
+import { OrderStatus, OrderType } from "@/types/models";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 
@@ -14,10 +14,13 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
   
   const getStatusLabel = () => {
     switch (status) {
+      case 'new': return 'Order received';
       case 'pending': return 'Order received';
       case 'confirmed': return 'Order confirmed';
+      case 'cooking':
       case 'preparing': return 'Preparing your food';
       case 'ready': return 'Ready for pickup/delivery';
+      case 'dispatched': return 'Out for delivery';
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
       default: return 'Unknown status';
@@ -26,10 +29,13 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
 
   const getStatusPercentage = () => {
     switch (status) {
+      case 'new': 
       case 'pending': return 10;
       case 'confirmed': return 25;
+      case 'cooking':
       case 'preparing': return 50;
       case 'ready': return 75;
+      case 'dispatched': return 85;
       case 'delivered': return 100;
       case 'cancelled': return 0;
       default: return 0;

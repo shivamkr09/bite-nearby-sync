@@ -31,7 +31,6 @@ export interface RestaurantType {
   opening_time: string | null;
   closing_time: string | null;
   distance?: number;
-  // Added fields from database
   latitude?: number;
   longitude?: number;
   updated_at?: string;
@@ -84,8 +83,8 @@ export interface OrderWithItems extends OrderType {
   items: OrderItemType[];
 }
 
-// Update OrderStatus to match Supabase enum
-export type OrderStatus = 'new' | 'confirmed' | 'cooking' | 'ready' | 'dispatched' | 'delivered' | 'cancelled';
+// Update OrderStatus to match all possible statuses used in the app
+export type OrderStatus = 'new' | 'confirmed' | 'cooking' | 'ready' | 'dispatched' | 'delivered' | 'cancelled' | 'pending' | 'preparing';
 
 export interface OrderItemType {
   id: string;
