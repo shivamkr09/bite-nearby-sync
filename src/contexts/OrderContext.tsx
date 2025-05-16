@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,9 +72,16 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         if (itemsError) throw itemsError;
         
+        // Map each item to ensure it has all required OrderItemType properties
+        const mappedItems: OrderItemType[] = orderItems.map((item: any) => ({
+          ...item,
+          item_price: item.price || 0,
+          total_price: (item.price || 0) * item.quantity
+        }));
+        
         ordersWithItems.push({
           ...order,
-          items: orderItems
+          items: mappedItems
         });
       }
       
@@ -96,7 +104,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: "You can only order from one restaurant at a time. Your cart will be cleared.",
         variant: "destructive"
       });
-      setCart([{ ...item, quantity: 1 }]);
+      setCart([{ id: item.id, menuItem: item, quantity: 1 }]);
       setCurrentRestaurantId(restaurantId);
       return;
     }
@@ -115,8 +123,12 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updatedCart[existingItemIndex].quantity += 1;
       setCart(updatedCart);
     } else {
-      // Add new item
-      setCart([...cart, { ...item, quantity: 1 }]);
+      // Add new item as CartItemType
+      setCart([...cart, { 
+        id: item.id, 
+        menuItem: item, 
+        quantity: 1 
+      }]);
     }
     
     toast({
@@ -200,7 +212,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (itemsError) throw itemsError;
       
-      // Set the availability request in state
+      // Set the availability request in state with properly mapped items
       const requestWithItems: AvailabilityRequestWithItems = {
         ...requestData,
         items: cart.map(item => ({
@@ -209,7 +221,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           menu_item_id: item.id,
           quantity: item.quantity,
           created_at: new Date().toISOString(),
-          menu_item: item
+          menu_item: item.menuItem
         }))
       };
       
@@ -299,7 +311,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           restaurant_id: currentRestaurantId,
           customer_name: `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim(),
           restaurant_name: restaurant.name,
-          total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+          total: cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0),
           status: 'new',
           estimated_time: availabilityResponse.estimatedTime,
           address,
@@ -314,9 +326,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const orderItemsToInsert = cart.map(item => ({
         order_id: orderData.id,
         menu_item_id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
+        name: item.menuItem.name,
+        description: item.menuItem.description,
+        price: item.menuItem.price,
         quantity: item.quantity
       }));
       

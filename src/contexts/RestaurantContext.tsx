@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useLocation } from '@/contexts/LocationContext';
@@ -9,7 +10,8 @@ import {
   OrderWithItems,
   AvailabilityRequestWithItems,
   OrderStatus,
-  RestaurantDetailsType
+  RestaurantDetailsType,
+  OrderItemType
 } from "@/types/models";
 
 type RestaurantInputType = {
@@ -80,8 +82,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      // Calculate distance for each restaurant
-      const restaurantsWithDistance = data.map(restaurant => {
+      // Calculate distance for each restaurant and fill in missing fields
+      const restaurantsWithDistance = data.map((restaurant: any) => {
         const distance = calculateDistance(
           userLocation.latitude, 
           userLocation.longitude,
@@ -89,15 +91,38 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           Number(restaurant.longitude)
         );
         
-        return {
-          ...restaurant,
-          distance
+        // Ensure all RestaurantType fields are present
+        const completeRestaurant: RestaurantType = {
+          id: restaurant.id,
+          created_at: restaurant.created_at,
+          name: restaurant.name,
+          description: restaurant.description || null,
+          address: restaurant.address || null,
+          city: restaurant.city || null,
+          state: restaurant.state || null,
+          zip_code: restaurant.zip_code || null,
+          phone_number: restaurant.phone_number || null,
+          website: restaurant.website || null,
+          owner_id: restaurant.owner_id,
+          image_url: restaurant.image_url || null,
+          cuisine_type: restaurant.cuisine_type || null,
+          rating: restaurant.rating || null,
+          number_of_ratings: restaurant.number_of_ratings || null,
+          is_open: restaurant.is_open || false,
+          opening_time: restaurant.opening_time || null,
+          closing_time: restaurant.closing_time || null,
+          distance,
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
+          updated_at: restaurant.updated_at
         };
+        
+        return completeRestaurant;
       });
 
       // Filter restaurants within 5km and sort by distance
       const nearbyRestaurants = restaurantsWithDistance
-        .filter(r => r.distance <= 5)
+        .filter(r => r.distance !== undefined && r.distance <= 5)
         .sort((a, b) => (a.distance || 0) - (b.distance || 0));
       
       setRestaurants(nearbyRestaurants);
@@ -133,7 +158,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (restaurantError) throw restaurantError;
       
       // Fetch menu items
-      const { data: menu, error: menuError } = await supabase
+      const { data: menuItems, error: menuError } = await supabase
         .from('menu_items')
         .select('*')
         .eq('restaurant_id', id);
@@ -141,15 +166,25 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (menuError) throw menuError;
       
       // Get unique categories
-      const categories = Array.from(new Set(menu.map(item => item.category)));
+      const categories = Array.from(new Set(menuItems.map((item: MenuItemType) => item.category)));
       
-      // Create details object with imageUrl and distance properties
+      // Create details object with complete RestaurantType fields
       const details: RestaurantDetailsType = {
         ...restaurant,
-        menu,
+        menu_items: menuItems,
         categories,
         imageUrl: restaurant.image_url,
-        distance: restaurants.find(r => r.id === id)?.distance
+        distance: restaurants.find(r => r.id === id)?.distance,
+        // Ensure all fields from RestaurantType are present
+        city: restaurant.city || null,
+        state: restaurant.state || null,
+        zip_code: restaurant.zip_code || null,
+        phone_number: restaurant.phone_number || null,
+        website: restaurant.website || null,
+        cuisine_type: restaurant.cuisine_type || null,
+        number_of_ratings: restaurant.number_of_ratings || null,
+        opening_time: restaurant.opening_time || null,
+        closing_time: restaurant.closing_time || null
       };
       
       setRestaurantDetails(details);
@@ -179,7 +214,32 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      setVendorRestaurants(data);
+      // Ensure all fields from RestaurantType are present
+      const completeRestaurants: RestaurantType[] = data.map((restaurant: any) => ({
+        id: restaurant.id,
+        created_at: restaurant.created_at,
+        name: restaurant.name,
+        description: restaurant.description || null,
+        address: restaurant.address || null,
+        city: restaurant.city || null,
+        state: restaurant.state || null,
+        zip_code: restaurant.zip_code || null,
+        phone_number: restaurant.phone_number || null,
+        website: restaurant.website || null,
+        owner_id: restaurant.owner_id,
+        image_url: restaurant.image_url || null,
+        cuisine_type: restaurant.cuisine_type || null,
+        rating: restaurant.rating || null,
+        number_of_ratings: restaurant.number_of_ratings || null,
+        is_open: restaurant.is_open || false,
+        opening_time: restaurant.opening_time || null,
+        closing_time: restaurant.closing_time || null,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        updated_at: restaurant.updated_at
+      }));
+      
+      setVendorRestaurants(completeRestaurants);
     } catch (error) {
       console.error("Error fetching vendor restaurants:", error);
       toast({
@@ -228,11 +288,18 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         if (itemsError) throw itemsError;
         
+        // Map items to ensure all OrderItemType fields are present
+        const mappedItems: OrderItemType[] = orderItems.map((item: any) => ({
+          ...item,
+          item_price: item.price || 0,
+          total_price: (item.price || 0) * item.quantity
+        }));
+        
         // Ensure proper typing of all fields
         ordersWithItems.push({
           ...order,
           status: order.status as OrderStatus, // Cast to OrderStatus type
-          items: orderItems
+          items: mappedItems
         });
       }
       
@@ -450,8 +517,33 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      // Update the local state
-      setVendorRestaurants(prev => [...prev, restaurant]);
+      // Create a complete RestaurantType object
+      const completeRestaurant: RestaurantType = {
+        id: restaurant.id,
+        created_at: restaurant.created_at,
+        name: restaurant.name,
+        description: restaurant.description || null,
+        address: restaurant.address || null,
+        city: null,
+        state: null,
+        zip_code: null,
+        phone_number: null,
+        website: null,
+        owner_id: restaurant.owner_id,
+        image_url: restaurant.image_url || null,
+        cuisine_type: null,
+        rating: null,
+        number_of_ratings: null,
+        is_open: restaurant.is_open || true,
+        opening_time: null,
+        closing_time: null,
+        latitude: restaurant.latitude,
+        longitude: restaurant.longitude,
+        updated_at: restaurant.updated_at
+      };
+      
+      // Update the local state with the compliant RestaurantType
+      setVendorRestaurants(prev => [...prev, completeRestaurant]);
       
       toast({
         title: "Restaurant created",

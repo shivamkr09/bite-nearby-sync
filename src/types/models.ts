@@ -1,3 +1,4 @@
+
 export interface UserType {
   id: string;
   createdAt: string;
@@ -31,10 +32,16 @@ export interface RestaurantType {
   opening_time: string | null;
   closing_time: string | null;
   distance?: number;
+  // Added fields from database
+  latitude?: number;
+  longitude?: number;
+  updated_at?: string;
 }
 
 export interface RestaurantDetailsType extends RestaurantType {
   menu_items?: MenuItemType[];
+  categories?: string[];
+  imageUrl?: string | null;
 }
 
 export interface MenuItemType {
@@ -55,15 +62,15 @@ export interface OrderType {
   created_at: string;
   customer_id: string;
   restaurant_id: string;
-  order_date: string;
-  total_amount: number;
+  order_date?: string;
+  total_amount?: number;
   status: OrderStatus;
-  delivery_address: string | null;
-  delivery_city: string | null;
-  delivery_state: string | null;
-  delivery_zip_code: string | null;
-  delivery_phone_number: string | null;
-  notes: string | null;
+  delivery_address?: string | null;
+  delivery_city?: string | null;
+  delivery_state?: string | null;
+  delivery_zip_code?: string | null;
+  delivery_phone_number?: string | null;
+  notes?: string | null;
   restaurant_name?: string;
   customer_name?: string;
   total?: number;
@@ -71,6 +78,7 @@ export interface OrderType {
   items?: OrderItemType[];
   phone?: string | null;
   address?: string | null;
+  updated_at?: string;
 }
 
 export interface OrderWithItems extends OrderType {
@@ -85,8 +93,8 @@ export interface OrderItemType {
   order_id: string;
   menu_item_id: string;
   quantity: number;
-  item_price: number;
-  total_price: number;
+  item_price?: number;
+  total_price?: number;
   name?: string;
   price?: number;
   description?: string;
@@ -168,6 +176,7 @@ export interface AvailabilityRequestType {
   status: 'pending' | 'approved' | 'rejected' | 'responded';
   estimated_time_query: string;
   estimated_time?: string;
+  updated_at?: string;
 }
 
 export interface AvailabilityRequestWithItems extends AvailabilityRequestType {
@@ -176,6 +185,8 @@ export interface AvailabilityRequestWithItems extends AvailabilityRequestType {
     menu_item_id: string;
     quantity: number;
     menu_item?: MenuItemType;
+    request_id?: string;
+    created_at?: string;
   }[];
   restaurant?: RestaurantType;
 }
