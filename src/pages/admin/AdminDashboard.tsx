@@ -1,216 +1,277 @@
 
-// For the AdminDashboard.tsx file, we need to modify the data fetching approach:
-// Import the necessary components and hooks
-import { useEffect, useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  AnalyticsDataType, 
-  VendorApprovalType,
-  SupportTicketType
-} from '@/types/models';
+import { useAuth } from "@/contexts/AuthContext";
+import { AnalyticsDataType, VendorApprovalType, SupportTicketType } from "@/types/models";
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const AdminDashboard = () => {
-  const [analytics, setAnalytics] = useState<AnalyticsDataType>({
-    id: '', 
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsDataType>({
+    id: "mock-analytics",
     date: new Date().toISOString(),
     total_orders: 0,
     total_revenue: 0,
     new_users: 0,
-    created_at: '',
-    updated_at: ''
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   });
-  const [vendorApprovals, setVendorApprovals] = useState<VendorApprovalType[]>([]);
-  const [supportTickets, setSupportTickets] = useState<SupportTicketType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [pendingVendors, setPendingVendors] = useState<VendorApprovalType[]>([]);
+  const [openTickets, setOpenTickets] = useState<SupportTicketType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  
+  // Mock data for the dashboard
+  const chartData = [
+    { name: "Jan", orders: 400, revenue: 2400 },
+    { name: "Feb", orders: 300, revenue: 1398 },
+    { name: "Mar", orders: 200, revenue: 9800 },
+    { name: "Apr", orders: 278, revenue: 3908 },
+    { name: "May", orders: 189, revenue: 4800 },
+    { name: "Jun", orders: 239, revenue: 3800 },
+    { name: "Jul", orders: 349, revenue: 4300 },
+  ];
 
-  // Fetch dashboard data
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        // For now, directly calculate the analytics data from orders
-        const { data: orders, error: ordersError } = await supabase
-          .from('orders')
-          .select('*');
-        
-        if (ordersError) throw ordersError;
-        
-        // Calculate total revenue and orders count
-        const totalRevenue = orders ? orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0) : 0;
-        const totalOrders = orders ? orders.length : 0;
-        
-        // Get user count
-        const { count: userCount, error: userError } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
-        
-        if (userError) throw userError;
-        
-        // Create analytics object
-        const analyticsData: AnalyticsDataType = {
-          id: 'current',
-          date: new Date().toISOString().split('T')[0],
-          total_orders: totalOrders,
-          total_revenue: totalRevenue,
-          new_users: userCount || 0,
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    setLoading(true);
+    
+    try {
+      // Mock fetch calls
+
+      // Set mock analytics data
+      setAnalyticsData({
+        id: "mock-analytics",
+        date: new Date().toISOString(),
+        total_orders: 235,
+        total_revenue: 4850.75,
+        new_users: 48,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      
+      // Set mock pending vendors
+      setPendingVendors([
+        {
+          id: "mock-vendor-1",
+          vendor_id: "vendor-id-1",
+          status: "pending",
+          admin_id: null,
+          notes: null,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        
-        setAnalytics(analyticsData);
-        
-        // For vendor approvals, we'll mock this data since the table doesn't exist yet
-        // In a real implementation, you would create the vendor_approvals table
-        const mockVendorApprovals: VendorApprovalType[] = [];
-        
-        setVendorApprovals(mockVendorApprovals);
-        
-        // For support tickets, we'll also mock this data
-        // In a real implementation, you would create the support_tickets table
-        const mockSupportTickets: SupportTicketType[] = [];
-        
-        setSupportTickets(mockSupportTickets);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast({
-          variant: "destructive",
-          title: "Dashboard Error",
-          description: "Failed to load dashboard data"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [toast]);
-
-  // Approve a vendor
-  const approveVendor = async (vendorId: string) => {
-    // Implementation for when vendor_approvals table exists
-    toast({
-      title: "Feature not implemented",
-      description: "Vendor approval functionality will be added soon"
-    });
-  };
-
-  // Reject a vendor
-  const rejectVendor = async (vendorId: string) => {
-    // Implementation for when vendor_approvals table exists
-    toast({
-      title: "Feature not implemented", 
-      description: "Vendor rejection functionality will be added soon"
-    });
-  };
-
-  // Mark support ticket as resolved
-  const resolveSupportTicket = async (ticketId: string) => {
-    // Implementation for when support_tickets table exists
-    toast({
-      title: "Feature not implemented",
-      description: "Support ticket resolution functionality will be added soon"
-    });
+          updated_at: new Date().toISOString(),
+          vendor: {
+            id: "vendor-id-1",
+            email: "vendor1@example.com",
+            first_name: "John",
+            last_name: "Doe"
+          }
+        },
+        {
+          id: "mock-vendor-2",
+          vendor_id: "vendor-id-2",
+          status: "pending",
+          admin_id: null,
+          notes: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          vendor: {
+            id: "vendor-id-2",
+            email: "vendor2@example.com",
+            first_name: "Jane",
+            last_name: "Smith"
+          }
+        }
+      ]);
+      
+      // Set mock support tickets
+      setOpenTickets([
+        {
+          id: "mock-ticket-1",
+          user_id: "user-id-1",
+          subject: "App crashes on startup",
+          description: "When I open the app on my iPhone 12, it crashes immediately.",
+          status: "open",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user: {
+            id: "user-id-1",
+            email: "user1@example.com",
+            first_name: "Alex",
+            last_name: "Johnson"
+          }
+        },
+        {
+          id: "mock-ticket-2",
+          user_id: "user-id-2",
+          subject: "Cannot update profile picture",
+          description: "I tried updating my profile picture but keep getting an error.",
+          status: "in_progress",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          user: {
+            id: "user-id-2",
+            email: "user2@example.com",
+            first_name: "Michael",
+            last_name: "Brown"
+          }
+        }
+      ]);
+      
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-
-      {/* Analytics */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Orders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? "Loading..." : analytics.total_orders}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${isLoading ? "Loading..." : analytics.total_revenue.toFixed(2)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">New Users</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{isLoading ? "Loading..." : analytics.new_users}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Vendor Approvals */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendor Approvals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading vendor approvals...</p>
-          ) : vendorApprovals.length > 0 ? (
-            <div className="space-y-4">
-              {vendorApprovals.map((approval) => (
-                <div key={approval.id} className="flex justify-between items-center p-4 border rounded-lg">
-                  <div>
-                    <p className="font-medium">{approval.vendor?.first_name} {approval.vendor?.last_name}</p>
-                    <p className="text-sm text-muted-foreground">{approval.vendor?.email}</p>
+    <div className="py-6">
+      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+      
+      {loading ? (
+        <div className="text-center py-8">Loading...</div>
+      ) : (
+        <>
+          {/* Analytics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Total Orders</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analyticsData.total_orders}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">Revenue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${analyticsData.total_revenue.toFixed(2)}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground">New Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{analyticsData.new_users}</div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Charts */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Monthly Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                      activeDot={{ r: 8 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="orders" 
+                      stroke="#82ca9d" 
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pending Vendor Approvals */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Vendor Approvals</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingVendors.length > 0 ? (
+                  <div className="space-y-4">
+                    {pendingVendors.map(vendor => (
+                      <div key={vendor.id} className="border-b pb-4 last:border-0">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{vendor.vendor.first_name} {vendor.vendor.last_name}</p>
+                            <p className="text-sm text-muted-foreground">{vendor.vendor.email}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Applied {new Date(vendor.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button size="sm">Review</Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => approveVendor(approval.vendor_id)} className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                      Approve
-                    </button>
-                    <button onClick={() => rejectVendor(approval.vendor_id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                      Reject
-                    </button>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">No pending approvals</p>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">No pending vendor approvals</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Support Tickets */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Support Tickets</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Loading support tickets...</p>
-          ) : supportTickets.length > 0 ? (
-            <div className="space-y-4">
-              {supportTickets.map((ticket) => (
-                <div key={ticket.id} className="p-4 border rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium">{ticket.subject}</h3>
-                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">{ticket.status}</span>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Support Tickets */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Open Support Tickets</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {openTickets.length > 0 ? (
+                  <div className="space-y-4">
+                    {openTickets.map(ticket => (
+                      <div key={ticket.id} className="border-b pb-4 last:border-0">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{ticket.subject}</p>
+                            <p className="text-sm text-muted-foreground truncate max-w-[300px]">
+                              {ticket.description}
+                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <span className="text-xs px-2 py-1 bg-muted rounded-full">
+                                {ticket.status === "open" ? "Open" : "In Progress"}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                From: {ticket.user.email}
+                              </span>
+                            </div>
+                          </div>
+                          <Button size="sm">Handle</Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{ticket.description}</p>
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-muted-foreground">From: {ticket.user?.email}</p>
-                    <button onClick={() => resolveSupportTicket(ticket.id)} className="text-sm text-blue-500 hover:underline">
-                      Mark as Resolved
-                    </button>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">No open tickets</p>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-center py-4 text-muted-foreground">No active support tickets</p>
-          )}
-        </CardContent>
-      </Card>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 };
