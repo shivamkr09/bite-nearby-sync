@@ -18,8 +18,8 @@ interface RestaurantContextType {
   vendorOrders: OrderWithItems[];
   selectedRestaurant: RestaurantType | null;
   nearbyRestaurants: RestaurantType[];
-  restaurants: RestaurantType[]; // Add this for customer pages
-  restaurantDetails: RestaurantDetailsType | null; // Add this for RestaurantDetailPage
+  restaurants: RestaurantType[]; 
+  restaurantDetails: RestaurantDetailsType | null;
   availabilityRequests: AvailabilityRequestWithItems[];
   fetchVendorRestaurants: () => Promise<void>;
   fetchVendorOrders: () => Promise<void>;
@@ -33,7 +33,7 @@ interface RestaurantContextType {
   fetchVendorAvailabilityRequests: () => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
   updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>;
-  isRestaurantOpen: (restaurantId: string) => boolean; // For RestaurantDetailPage
+  isRestaurantOpen: (restaurantId: string) => boolean;
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -141,14 +141,14 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       // Ensure status is valid for the database schema
       // Map any non-database statuses to the appropriate database status
-      let finalStatus: OrderStatus = status;
+      let dbStatus: string = status;
       
       // Convert pending or preparing to new if needed for database compatibility
-      if (status === 'pending' || status === 'preparing') finalStatus = 'new';
+      if (status === 'pending' || status === 'preparing') dbStatus = 'new';
       
       const { error } = await supabase
         .from('orders')
-        .update({ status: finalStatus, updated_at: new Date().toISOString() })
+        .update({ status: dbStatus, updated_at: new Date().toISOString() })
         .eq('id', orderId);
       
       if (error) throw error;
@@ -158,7 +158,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (order.id === orderId) {
           return {
             ...order,
-            status: finalStatus,
+            status: status, // Keep the original status in the front-end
             updated_at: new Date().toISOString()
           };
         }
@@ -169,7 +169,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       toast({
         title: "Order updated",
-        description: `Order status changed to ${finalStatus}`
+        description: `Order status changed to ${status}`
       });
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -308,12 +308,14 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         return { 
           ...restaurant,
           distance: calculatedDistance,
+          // Ensure all fields from RestaurantType are present
           city: restaurant.city || null,
           state: restaurant.state || null,
           zip_code: restaurant.zip_code || null,
           phone_number: restaurant.phone_number || null,
           website: restaurant.website || null,
           cuisine_type: restaurant.cuisine_type || null,
+          rating: restaurant.rating || null,
           number_of_ratings: restaurant.number_of_ratings || null,
           opening_time: restaurant.opening_time || null,
           closing_time: restaurant.closing_time || null
@@ -358,6 +360,10 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           image_url: data.image_url || null,
           cuisine_type: data.cuisine_type || null,
           is_open: true,
+          number_of_ratings: 0,
+          rating: 0,
+          opening_time: data.opening_time || null,
+          closing_time: data.closing_time || null
         });
         
       if (error) throw error;
@@ -471,7 +477,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Ensure type compatibility by properly mapping restaurant properties
       const typedRequests: AvailabilityRequestWithItems[] = (data || []).map((request: any) => {
         // Ensure restaurant has all required fields from RestaurantType
-        const restaurant = request.restaurant ? {
+        const restaurant: RestaurantType = request.restaurant ? {
           ...request.restaurant,
           city: request.restaurant.city || null,
           state: request.restaurant.state || null,
@@ -479,6 +485,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           phone_number: request.restaurant.phone_number || null,
           website: request.restaurant.website || null,
           cuisine_type: request.restaurant.cuisine_type || null,
+          rating: request.restaurant.rating || null,
           number_of_ratings: request.restaurant.number_of_ratings || null,
           opening_time: request.restaurant.opening_time || null,
           closing_time: request.restaurant.closing_time || null
@@ -504,7 +511,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const respondToAvailabilityRequest = useCallback(async (requestId: string, estimatedTime: string, isAvailable: boolean) => {
     try {
       // Use 'responded' instead of 'approved' to match the availability_request_status type
-      const status = isAvailable ? 'responded' : 'rejected';
+      const status: 'responded' | 'rejected' = isAvailable ? 'responded' : 'rejected';
       
       const { error } = await supabase
         .from('availability_requests')
@@ -524,7 +531,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           {
             ...request,
             estimated_time: isAvailable ? estimatedTime : null,
-            status: isAvailable ? 'responded' : 'rejected',
+            status,
             updated_at: new Date().toISOString()
           } : 
           request

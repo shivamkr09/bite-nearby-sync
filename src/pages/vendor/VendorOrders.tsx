@@ -42,7 +42,7 @@ const VendorOrders = () => {
           <TabsContent key={tab} value={tab} className="mt-4">
             {getFilteredOrders(tab as string | "all").length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {getFilteredOrders(tab as string | "all").map((order) => (
+                {getFilteredOrders(tab as string | "all").map((order: OrderWithItems) => (
                   <OrderManagementCard key={order.id} order={order} />
                 ))}
               </div>

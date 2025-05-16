@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import { formatDistanceToNow } from "date-fns";
-import { AvailabilityRequestWithItems } from "@/types/supabase";
+import { AvailabilityRequestWithItems } from "@/types/models";
 
 interface AvailabilityRequestCardProps {
   request: AvailabilityRequestWithItems;

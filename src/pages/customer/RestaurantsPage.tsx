@@ -16,6 +16,9 @@ const RestaurantsPage = () => {
     if (userLocation) {
       // Pass userLocation coordinates to fetchNearbyRestaurants
       fetchNearbyRestaurants(userLocation.latitude, userLocation.longitude);
+    } else {
+      // Fetch all restaurants if location not available
+      fetchNearbyRestaurants();
     }
   }, [userLocation, fetchNearbyRestaurants]);
   
