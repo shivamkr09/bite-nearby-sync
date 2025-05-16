@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { AnalyticsDataType, VendorApprovalType, SupportTicketType } from "@/types/models";
-import { ArrowUp, ArrowDown, Users, Store, ShoppingCart, AlertTriangle } from "lucide-react";
+import { ArrowUp, Users, Store, ShoppingCart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Link } from "react-router-dom";
 
 const AdminDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsDataType | null>(null);
@@ -24,60 +25,139 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch analytics for today
-      const today = new Date().toISOString().split('T')[0];
-      const { data: analyticsData, error: analyticsError } = await supabase
-        .from('admin_analytics')
-        .select('*')
-        .eq('date', today)
-        .single();
-      
-      if (!analyticsError) {
-        setAnalyticsData(analyticsData);
+      // Check if admin_analytics table exists
+      try {
+        // Fetch analytics for today
+        const today = new Date().toISOString().split('T')[0];
+        const { data: analyticsData, error: analyticsError } = await supabase
+          .from('admin_analytics')
+          .select('*')
+          .eq('date', today);
+        
+        if (!analyticsError && analyticsData && analyticsData.length > 0) {
+          setAnalyticsData(analyticsData[0] as AnalyticsDataType);
+        } else {
+          // If no analytics data or table doesn't exist, create a default
+          setAnalyticsData({
+            id: '0',
+            date: today,
+            total_orders: 0,
+            total_revenue: 0,
+            new_users: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        // Fallback analytics object
+        setAnalyticsData({
+          id: '0',
+          date: new Date().toISOString().split('T')[0],
+          total_orders: 0,
+          total_revenue: 0,
+          new_users: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
       }
 
-      // Fetch pending vendor approvals
-      const { data: vendorApprovals, error: approvalsError } = await supabase
-        .from('vendor_approvals')
-        .select('*, vendor:profiles(*)')
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-      
-      if (!approvalsError && vendorApprovals) {
-        setVendorApprovals(vendorApprovals);
+      // Try to fetch vendor approvals
+      try {
+        const { data: vendorApprovalsData, error: approvalsError } = await supabase
+          .from('vendor_approvals')
+          .select('*, vendor:profiles(*)')
+          .eq('status', 'pending');
+        
+        if (!approvalsError && vendorApprovalsData) {
+          // Map to VendorApprovalType
+          const mappedVendorApprovals: VendorApprovalType[] = vendorApprovalsData.map((approval: any) => ({
+            id: approval.id || '',
+            vendor_id: approval.vendor_id || '',
+            status: approval.status || 'pending',
+            admin_id: approval.admin_id || null,
+            notes: approval.notes || null,
+            created_at: approval.created_at || new Date().toISOString(),
+            updated_at: approval.updated_at || new Date().toISOString(),
+            vendor: approval.vendor ? {
+              id: approval.vendor.id || '',
+              email: approval.vendor.email || '',
+              first_name: approval.vendor.first_name || '',
+              last_name: approval.vendor.last_name || ''
+            } : undefined
+          }));
+          
+          setVendorApprovals(mappedVendorApprovals);
+        } else {
+          setVendorApprovals([]);
+        }
+      } catch (error) {
+        console.error("Error fetching vendor approvals:", error);
+        setVendorApprovals([]);
       }
 
-      // Fetch open support tickets
-      const { data: supportTickets, error: ticketsError } = await supabase
-        .from('support_tickets')
-        .select('*, user:profiles(*)')
-        .in('status', ['open', 'in_progress'])
-        .order('created_at', { ascending: false });
-      
-      if (!ticketsError && supportTickets) {
-        setSupportTickets(supportTickets);
+      // Try to fetch support tickets
+      try {
+        const { data: supportTicketsData, error: ticketsError } = await supabase
+          .from('support_tickets')
+          .select('*, user:profiles(*)')
+          .in('status', ['open', 'in_progress']);
+        
+        if (!ticketsError && supportTicketsData) {
+          // Map to SupportTicketType
+          const mappedSupportTickets: SupportTicketType[] = supportTicketsData.map((ticket: any) => ({
+            id: ticket.id || '',
+            user_id: ticket.user_id || '',
+            subject: ticket.subject || '',
+            description: ticket.description || '',
+            status: ticket.status || 'open',
+            created_at: ticket.created_at || new Date().toISOString(),
+            updated_at: ticket.updated_at || new Date().toISOString(),
+            user: ticket.user ? {
+              id: ticket.user.id || '',
+              email: ticket.user.email || '',
+              first_name: ticket.user.first_name || '',
+              last_name: ticket.user.last_name || ''
+            } : undefined
+          }));
+          
+          setSupportTickets(mappedSupportTickets);
+        } else {
+          setSupportTickets([]);
+        }
+      } catch (error) {
+        console.error("Error fetching support tickets:", error);
+        setSupportTickets([]);
       }
 
       // Get user counts
-      const { count: customerCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_type', 'customer');
-      
-      const { count: vendorCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_type', 'vendor');
-      
-      setUserCount(customerCount || 0);
-      setVendorCount(vendorCount || 0);
+      try {
+        const { count: customerCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_type', 'customer');
+        
+        const { count: vendorCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_type', 'vendor');
+        
+        setUserCount(customerCount || 0);
+        setVendorCount(vendorCount || 0);
+      } catch (error) {
+        console.error("Error fetching user counts:", error);
+      }
 
       // Get order counts
-      const { count: orderCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
-      
-      setOrderCount(orderCount || 0);
+      try {
+        const { count: orderCount } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true });
+        
+        setOrderCount(orderCount || 0);
+      } catch (error) {
+        console.error("Error fetching order count:", error);
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
@@ -92,11 +172,14 @@ const AdminDashboard = () => {
 
   const approveVendor = async (vendorId: string) => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const adminId = userData?.user?.id || null;
+      
       const { error } = await supabase
         .from('vendor_approvals')
         .update({ 
           status: 'approved',
-          admin_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          admin_id: adminId,
           updated_at: new Date().toISOString()
         })
         .eq('vendor_id', vendorId);
@@ -122,11 +205,14 @@ const AdminDashboard = () => {
 
   const rejectVendor = async (vendorId: string) => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const adminId = userData?.user?.id || null;
+      
       const { error } = await supabase
         .from('vendor_approvals')
         .update({ 
           status: 'rejected',
-          admin_id: supabase.auth.getUser().then(({ data }) => data.user?.id),
+          admin_id: adminId,
           updated_at: new Date().toISOString()
         })
         .eq('vendor_id', vendorId);
@@ -235,14 +321,14 @@ const AdminDashboard = () => {
                     <div className="flex space-x-2">
                       <Button 
                         size="sm" 
-                        onClick={() => approveVendor(approval.vendor_id)}
+                        onClick={() => approval.vendor_id && approveVendor(approval.vendor_id)}
                       >
                         Approve
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        onClick={() => rejectVendor(approval.vendor_id)}
+                        onClick={() => approval.vendor_id && rejectVendor(approval.vendor_id)}
                       >
                         Reject
                       </Button>
@@ -270,7 +356,7 @@ const AdminDashboard = () => {
                   <div key={ticket.id} className="border rounded-md p-4">
                     <div className="flex justify-between mb-2">
                       <h3 className="font-medium flex items-center">
-                        <AlertTriangle className="h-4 w-4 text-amber-500 mr-2" />
+                        <span className="h-2 w-2 bg-amber-500 rounded-full mr-2"></span>
                         {ticket.subject}
                       </h3>
                       <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">

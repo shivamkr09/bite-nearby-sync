@@ -1,4 +1,3 @@
-
 export interface UserType {
   id: string;
   createdAt: string;
@@ -85,7 +84,8 @@ export interface OrderWithItems extends OrderType {
   items: OrderItemType[];
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' | 'new' | 'cooking' | 'dispatched';
+// Update OrderStatus to match Supabase enum
+export type OrderStatus = 'new' | 'confirmed' | 'cooking' | 'ready' | 'dispatched' | 'delivered' | 'cancelled';
 
 export interface OrderItemType {
   id: string;

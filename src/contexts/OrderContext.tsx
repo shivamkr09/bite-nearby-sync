@@ -74,9 +74,17 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         
         // Map each item to ensure it has all required OrderItemType properties
         const mappedItems: OrderItemType[] = orderItems.map((item: any) => ({
-          ...item,
+          id: item.id,
+          created_at: item.created_at,
+          order_id: item.order_id,
+          menu_item_id: item.menu_item_id,
+          quantity: item.quantity,
+          name: item.name,
+          description: item.description,
+          price: item.price,
           item_price: item.price || 0,
-          total_price: (item.price || 0) * item.quantity
+          total_price: (item.price || 0) * item.quantity,
+          menu_item: item.menu_item
         }));
         
         ordersWithItems.push({
@@ -212,15 +220,15 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (itemsError) throw itemsError;
       
-      // Set the availability request in state with properly mapped items
+      // Set the availability request in state with properly typed items
       const requestWithItems: AvailabilityRequestWithItems = {
         ...requestData,
         items: cart.map(item => ({
           id: '',
-          request_id: requestData.id,
           menu_item_id: item.id,
           quantity: item.quantity,
           created_at: new Date().toISOString(),
+          request_id: requestData.id,
           menu_item: item.menuItem
         }))
       };

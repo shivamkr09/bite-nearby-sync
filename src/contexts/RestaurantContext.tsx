@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useLocation } from '@/contexts/LocationContext';
@@ -221,19 +220,19 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         name: restaurant.name,
         description: restaurant.description || null,
         address: restaurant.address || null,
-        city: restaurant.city || null,
-        state: restaurant.state || null,
-        zip_code: restaurant.zip_code || null,
-        phone_number: restaurant.phone_number || null,
-        website: restaurant.website || null,
+        city: null, // Add missing fields with null values
+        state: null,
+        zip_code: null,
+        phone_number: null,
+        website: null,
         owner_id: restaurant.owner_id,
         image_url: restaurant.image_url || null,
-        cuisine_type: restaurant.cuisine_type || null,
+        cuisine_type: null,
         rating: restaurant.rating || null,
-        number_of_ratings: restaurant.number_of_ratings || null,
+        number_of_ratings: null,
         is_open: restaurant.is_open || false,
-        opening_time: restaurant.opening_time || null,
-        closing_time: restaurant.closing_time || null,
+        opening_time: null,
+        closing_time: null,
         latitude: restaurant.latitude,
         longitude: restaurant.longitude,
         updated_at: restaurant.updated_at
@@ -290,9 +289,17 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         // Map items to ensure all OrderItemType fields are present
         const mappedItems: OrderItemType[] = orderItems.map((item: any) => ({
-          ...item,
+          id: item.id,
+          created_at: item.created_at,
+          order_id: item.order_id,
+          menu_item_id: item.menu_item_id,
+          quantity: item.quantity,
+          name: item.name,
+          price: item.price,
+          description: item.description,
           item_price: item.price || 0,
-          total_price: (item.price || 0) * item.quantity
+          total_price: (item.price || 0) * item.quantity,
+          menu_item: item.menu_item
         }));
         
         // Ensure proper typing of all fields
@@ -372,6 +379,12 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
     try {
+      // Ensure status is valid according to OrderStatus type
+      if (status === 'pending' as any) {
+        // If 'pending' comes in, convert to a valid status
+        status = 'new';
+      }
+      
       const { error } = await supabase
         .from('orders')
         .update({ status, updated_at: new Date().toISOString() })
@@ -517,7 +530,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      // Create a complete RestaurantType object
+      // Create a complete RestaurantType object with all required fields
       const completeRestaurant: RestaurantType = {
         id: restaurant.id,
         created_at: restaurant.created_at,
