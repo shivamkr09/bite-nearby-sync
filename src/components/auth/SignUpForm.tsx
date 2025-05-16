@@ -8,6 +8,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../common/ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +20,7 @@ const SignUpForm = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signUp, isLoading } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,23 +31,32 @@ const SignUpForm = () => {
       return;
     }
     
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
       console.log(`Signing up as ${userType} with email: ${email}, name: ${name}`);
       const userData = { name };
       await signUp(email, password, userType, userData);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      setError(err.message || "An error occurred during sign up");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Create an account</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <ThemeToggle />
+        </div>
         <CardDescription>
           Enter your information to create your {" "}
           <span className="font-medium text-primary">Bite Nearby</span> account
@@ -62,6 +74,7 @@ const SignUpForm = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
               required
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -75,6 +88,7 @@ const SignUpForm = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="johndoe@example.com"
               required
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -88,6 +102,7 @@ const SignUpForm = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
+              className="w-full"
             />
           </div>
           <div className="space-y-2">
@@ -101,6 +116,7 @@ const SignUpForm = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••"
               required
+              className="w-full"
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
@@ -147,7 +163,7 @@ const SignUpForm = () => {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between items-center'}`}>
         <Link to="/" className="flex items-center text-sm text-gray-500 hover:text-primary">
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to home

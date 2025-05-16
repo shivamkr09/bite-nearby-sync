@@ -12,12 +12,15 @@ import {
 } from "@/components/ui/sheet";
 import { useOrder } from "@/contexts/OrderContext";
 import { useState } from "react";
+import ThemeToggle from "../common/ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const CustomerLayout = () => {
   const { user, signOut } = useAuth();
   const { cart } = useOrder();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -39,10 +42,11 @@ const CustomerLayout = () => {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
+            
             <Link to="/customer/cart" className="relative">
-              <ShoppingCart className="h-6 w-6" />
+              <ShoppingCart className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {totalItems}
@@ -52,8 +56,8 @@ const CustomerLayout = () => {
             
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" className="ml-1">
+                  <Menu className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
                 </Button>
               </SheetTrigger>
               <SheetContent>

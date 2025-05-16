@@ -11,11 +11,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useState } from "react";
+import ThemeToggle from "../common/ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const VendorLayout = () => {
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const navItems = [
     { label: "Dashboard", path: "/vendor/dashboard" },
@@ -39,11 +42,13 @@ const VendorLayout = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center">
+          <div className="flex items-center space-x-3">
+            <ThemeToggle />
+            
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
+                  <Menu className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
                 </Button>
               </SheetTrigger>
               <SheetContent>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -89,6 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log("Signing up with user type:", userType);
       console.log("User data:", userData);
+
+      // Ensure the user_type is one of the allowed values
+      if (!['customer', 'vendor', 'admin'].includes(userType)) {
+        throw new Error("Invalid user type");
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email,

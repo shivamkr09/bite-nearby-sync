@@ -4,35 +4,44 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArrowLeft, LogIn } from "lucide-react";
+import ThemeToggle from "../common/ThemeToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signIn, isLoading } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setIsSubmitting(true);
     
     try {
-      console.log("Signing in with email:", email);
       await signIn(email, password);
-    } catch (err) {
-      console.error("Error during sign in:", err);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Invalid email or password");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl">Sign In</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-2xl">Sign In</CardTitle>
+          <ThemeToggle />
+        </div>
         <CardDescription>
-          Enter your email and password to access your account
+          Enter your credentials to access your account
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -51,15 +60,12 @@ const SignInForm = () => {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between">
               <label htmlFor="password" className="text-sm font-medium">
                 Password
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
+              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                Forgot Password?
               </Link>
             </div>
             <Input
@@ -70,6 +76,7 @@ const SignInForm = () => {
               placeholder="••••••••"
               required
             />
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
           <Button
             type="submit"
@@ -92,8 +99,21 @@ const SignInForm = () => {
             )}
           </Button>
         </form>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-background text-muted-foreground">Or continue with</span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <GoogleLoginButton />
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between items-center'}`}>
         <Link to="/" className="flex items-center text-sm text-gray-500 hover:text-primary">
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back to home

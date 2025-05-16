@@ -1,4 +1,3 @@
-
 export interface UserType {
   id: string;
   createdAt: string;
@@ -9,6 +8,7 @@ export interface UserType {
   updated_at: string | null;
   user_name: string | null;
   role: 'customer' | 'vendor' | 'admin' | null;
+  user_type?: 'customer' | 'vendor' | 'admin' | null;
 }
 
 export interface RestaurantType {
@@ -69,13 +69,15 @@ export interface OrderType {
   total?: number;
   estimated_time?: string;
   items?: OrderItemType[];
+  phone?: string | null;
+  address?: string | null;
 }
 
 export interface OrderWithItems extends OrderType {
   items: OrderItemType[];
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled' | 'new' | 'cooking' | 'dispatched';
 
 export interface OrderItemType {
   id: string;
@@ -85,6 +87,10 @@ export interface OrderItemType {
   quantity: number;
   item_price: number;
   total_price: number;
+  name?: string;
+  price?: number;
+  description?: string;
+  menu_item?: MenuItemType;
 }
 
 export interface TermsAndConditionsType {
@@ -149,6 +155,9 @@ export interface CartItemType {
   id: string;
   menuItem: MenuItemType;
   quantity: number;
+  name?: string;
+  price?: number;
+  description?: string;
 }
 
 export interface AvailabilityRequestType {
@@ -156,7 +165,7 @@ export interface AvailabilityRequestType {
   created_at: string;
   customer_id: string;
   restaurant_id: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'pending' | 'approved' | 'rejected' | 'responded';
   estimated_time_query: string;
   estimated_time?: string;
 }
