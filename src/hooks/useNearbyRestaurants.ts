@@ -30,30 +30,33 @@ export function useNearbyRestaurants() {
           calculatedDistance = Math.sqrt(dx * dx + dy * dy) * 111; // rough conversion to km
         }
         
-        // Ensure all fields from RestaurantType are present, including those missing in DB
+        // Create a fully typed restaurant object with all required fields
         const completeRestaurant: RestaurantType = {
           id: restaurant.id,
           created_at: restaurant.created_at,
           name: restaurant.name,
           description: restaurant.description || null,
           address: restaurant.address || null,
-          city: restaurant.city || null,
-          state: restaurant.state || null,
-          zip_code: restaurant.zip_code || null,
-          phone_number: restaurant.phone_number || null,
-          website: restaurant.website || null,
           owner_id: restaurant.owner_id,
           image_url: restaurant.image_url || null,
-          cuisine_type: restaurant.cuisine_type || null,
           rating: restaurant.rating || null,
-          number_of_ratings: restaurant.number_of_ratings || null,
           is_open: restaurant.is_open !== null ? restaurant.is_open : false,
-          opening_time: restaurant.opening_time || null,
-          closing_time: restaurant.closing_time || null,
           latitude: restaurant.latitude,
           longitude: restaurant.longitude,
           updated_at: restaurant.updated_at,
           distance: calculatedDistance,
+          
+          // Additional fields required by our type definitions that might not be in database
+          city: null,
+          state: null,
+          zip_code: null,
+          phone_number: null,
+          website: null,
+          cuisine_type: null,
+          number_of_ratings: null,
+          opening_time: null,
+          closing_time: null,
+          
           // Add categories and menu_items as empty arrays for consistency
           categories: [],
           menu_items: [],

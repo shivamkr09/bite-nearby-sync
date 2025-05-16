@@ -31,19 +31,34 @@ export function useRestaurantDetails() {
         [...new Set(menuItems.map(item => item.category))] : 
         [];
 
-      // Map database fields to our TypeScript types, adding missing properties with null values
+      // Create a fully typed restaurant details object with all required fields
       const fullRestaurantDetails: RestaurantDetailsType = {
-        ...restaurant,
-        city: restaurant.city || null,
-        state: restaurant.state || null,
-        zip_code: restaurant.zip_code || null,
-        phone_number: restaurant.phone_number || null,
-        website: restaurant.website || null,
-        cuisine_type: restaurant.cuisine_type || null,
+        // Base restaurant fields from database
+        id: restaurant.id,
+        created_at: restaurant.created_at,
+        name: restaurant.name,
+        description: restaurant.description || null,
+        address: restaurant.address || null,
+        owner_id: restaurant.owner_id,
+        image_url: restaurant.image_url || null,
         rating: restaurant.rating || null,
-        number_of_ratings: restaurant.number_of_ratings || null,
-        opening_time: restaurant.opening_time || null,
-        closing_time: restaurant.closing_time || null,
+        is_open: restaurant.is_open !== null ? restaurant.is_open : null,
+        latitude: restaurant.latitude || null,
+        longitude: restaurant.longitude || null,
+        updated_at: restaurant.updated_at || null,
+        
+        // Additional fields required by our type definitions that might not be in database
+        city: null,
+        state: null,
+        zip_code: null,
+        phone_number: null,
+        website: null,
+        cuisine_type: null,
+        number_of_ratings: null,
+        opening_time: null,
+        closing_time: null,
+        
+        // Menu related fields
         menu_items: menuItems || [],
         menu: menuItems || [],
         categories

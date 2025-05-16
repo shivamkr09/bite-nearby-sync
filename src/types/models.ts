@@ -32,9 +32,9 @@ export interface RestaurantType {
   opening_time: string | null;
   closing_time: string | null;
   distance?: number;
-  latitude?: number;
-  longitude?: number;
-  updated_at?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  updated_at?: string | null;
   menu_items?: MenuItemType[];
   categories?: string[];
   imageUrl?: string | null;

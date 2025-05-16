@@ -61,11 +61,23 @@ export function useVendorOrders(userId: string | undefined) {
     try {
       // Ensure status is valid for the database schema
       // Map any non-database statuses to the appropriate database status
-      let dbStatus: OrderStatus = status;
+      let dbStatus: "new" | "confirmed" | "cooking" | "ready" | "dispatched" | "delivered";
       
-      // Convert pending or preparing to new if needed for database compatibility
-      if (status === 'pending' || status === 'preparing') dbStatus = 'new';
-      
+      // Convert non-standard statuses to database-compatible ones
+      switch (status) {
+        case 'pending':
+        case 'preparing':
+          dbStatus = 'new';
+          break;
+        case 'cancelled':
+          // For cancelled, we'll use 'new' in the database but preserve 'cancelled' in the UI
+          dbStatus = 'new';
+          break;
+        default:
+          // For standard statuses, use as is
+          dbStatus = status as "new" | "confirmed" | "cooking" | "ready" | "dispatched" | "delivered";
+      }
+
       const { error } = await supabase
         .from('orders')
         .update({ status: dbStatus, updated_at: new Date().toISOString() })
