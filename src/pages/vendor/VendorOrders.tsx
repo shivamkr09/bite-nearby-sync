@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import OrderManagementCard from "@/components/vendor/OrderManagementCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OrderWithItems } from "@/types/supabase";
+import { OrderWithItems } from "@/types/models";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VendorOrders = () => {

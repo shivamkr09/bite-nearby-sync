@@ -49,7 +49,9 @@ const RestaurantDetailPage = () => {
     );
   }
   
-  const { name, address, description, menu, categories, imageUrl, distance } = restaurantDetails;
+  const { name, address, description, menu_items, categories, image_url, distance } = restaurantDetails;
+  // Use menu_items as menu if menu is not defined
+  const menu = restaurantDetails.menu || menu_items || [];
   
   const filteredMenu = activeCategory 
     ? menu.filter(item => item.category === activeCategory)
@@ -67,9 +69,9 @@ const RestaurantDetailPage = () => {
       </Button>
       
       <div className="relative h-40 md:h-64 w-full bg-muted rounded-lg overflow-hidden mb-4">
-        {imageUrl ? (
+        {image_url ? (
           <img 
-            src={imageUrl} 
+            src={image_url} 
             alt={name} 
             className="h-full w-full object-cover" 
           />
@@ -104,7 +106,7 @@ const RestaurantDetailPage = () => {
         </div>
       )}
       
-      {categories.length > 0 && (
+      {categories && categories.length > 0 && (
         <Tabs value={activeCategory || categories[0]} className="mb-6">
           <TabsList className="overflow-x-auto flex w-full mb-4">
             {categories.map(category => (

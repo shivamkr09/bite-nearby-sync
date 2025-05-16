@@ -41,6 +41,7 @@ export interface RestaurantDetailsType extends RestaurantType {
   menu_items?: MenuItemType[];
   categories?: string[];
   imageUrl?: string | null;
+  menu?: MenuItemType[];
 }
 
 export interface MenuItemType {

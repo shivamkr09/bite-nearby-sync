@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { VendorApprovalType } from "@/types/models";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
@@ -52,7 +51,33 @@ const VendorApprovals = () => {
     setTimeout(() => {
       setLoading(false);
     }, 500);
-  }, []);
+    
+    // In a real app, we would fetch from Supabase here
+    /* 
+    const fetchVendorApprovals = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('vendor_approvals')
+          .select(`*, vendor:profiles(id, email, first_name, last_name)`)
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        setVendors(data as VendorApprovalType[]);
+      } catch (error) {
+        console.error('Error fetching vendor approvals:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load vendor approvals"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchVendorApprovals();
+    */
+  }, [toast]);
 
   const handleNoteChange = (vendorId: string, note: string) => {
     setNotes({ ...notes, [vendorId]: note });
@@ -64,7 +89,7 @@ const VendorApprovals = () => {
     try {
       // In a real application, this would update the database
       // For now, we'll just update the state
-      const updatedVendors = vendors.map(vendor => 
+      const updatedVendors: VendorApprovalType[] = vendors.map(vendor => 
         vendor.vendor_id === vendorId ? {
           ...vendor,
           status: 'approved',
@@ -96,7 +121,7 @@ const VendorApprovals = () => {
     try {
       // In a real application, this would update the database
       // For now, we'll just update the state
-      const updatedVendors = vendors.map(vendor => 
+      const updatedVendors: VendorApprovalType[] = vendors.map(vendor => 
         vendor.vendor_id === vendorId ? {
           ...vendor,
           status: 'rejected',

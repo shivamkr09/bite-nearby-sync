@@ -14,14 +14,15 @@ const RestaurantsPage = () => {
   
   useEffect(() => {
     if (userLocation) {
-      fetchNearbyRestaurants();
+      // Pass userLocation coordinates to fetchNearbyRestaurants
+      fetchNearbyRestaurants(userLocation.latitude, userLocation.longitude);
     }
   }, [userLocation, fetchNearbyRestaurants]);
   
   const filteredRestaurants = searchQuery
     ? restaurants.filter(restaurant => 
         restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        restaurant.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (restaurant.description && restaurant.description.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : restaurants;
 

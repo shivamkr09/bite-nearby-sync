@@ -8,28 +8,32 @@ import {
   OrderType, 
   MenuItemType, 
   OrderStatus,
-  AvailabilityRequestWithItems
+  AvailabilityRequestWithItems,
+  OrderWithItems
 } from "@/types/models";
 import { useAuth } from "./AuthContext";
 
 interface RestaurantContextType {
   vendorRestaurants: RestaurantType[];
-  vendorOrders: OrderType[];
+  vendorOrders: OrderWithItems[];
   selectedRestaurant: RestaurantType | null;
   nearbyRestaurants: RestaurantType[];
+  restaurants: RestaurantType[]; // Add this for customer pages
+  restaurantDetails: RestaurantDetailsType | null; // Add this for RestaurantDetailPage
   availabilityRequests: AvailabilityRequestWithItems[];
   fetchVendorRestaurants: () => Promise<void>;
   fetchVendorOrders: () => Promise<void>;
   fetchRestaurantDetails: (id: string) => Promise<RestaurantDetailsType | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   setSelectedRestaurant: React.Dispatch<React.SetStateAction<RestaurantType | null>>;
-  fetchNearbyRestaurants: (latitude: number, longitude: number, distance?: number) => Promise<void>;
+  fetchNearbyRestaurants: (latitude?: number, longitude?: number, distance?: number) => Promise<void>;
   createRestaurant: (data: Partial<RestaurantType>) => Promise<void>;
   updateRestaurant: (id: string, data: Partial<RestaurantType>) => Promise<void>;
   deleteRestaurant: (id: string) => Promise<void>;
   fetchVendorAvailabilityRequests: () => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
-  updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>; // Add the missing function
+  updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>;
+  isRestaurantOpen: (restaurantId: string) => boolean; // For RestaurantDetailPage
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -37,11 +41,19 @@ const RestaurantContext = createContext<RestaurantContextType | undefined>(undef
 export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [vendorRestaurants, setVendorRestaurants] = useState<RestaurantType[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantType | null>(null);
-  const [vendorOrders, setVendorOrders] = useState<OrderType[]>([]);
+  const [vendorOrders, setVendorOrders] = useState<OrderWithItems[]>([]);
   const [nearbyRestaurants, setNearbyRestaurants] = useState<RestaurantType[]>([]);
+  const [restaurants, setRestaurants] = useState<RestaurantType[]>([]);
+  const [restaurantDetails, setRestaurantDetails] = useState<RestaurantDetailsType | null>(null);
   const [availabilityRequests, setAvailabilityRequests] = useState<AvailabilityRequestWithItems[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check if a restaurant is open
+  const isRestaurantOpen = useCallback((restaurantId: string): boolean => {
+    const restaurant = [...vendorRestaurants, ...nearbyRestaurants].find(r => r.id === restaurantId);
+    return restaurant?.is_open === true;
+  }, [vendorRestaurants, nearbyRestaurants]);
 
   const fetchVendorRestaurants = useCallback(async () => {
     if (!user) return;
@@ -71,7 +83,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         cuisine_type: restaurant.cuisine_type || null,
         rating: restaurant.rating || null,
         number_of_ratings: restaurant.number_of_ratings || null,
-        is_open: restaurant.is_open || false,
+        is_open: restaurant.is_open !== null ? restaurant.is_open : false,
         opening_time: restaurant.opening_time || null,
         closing_time: restaurant.closing_time || null,
         latitude: restaurant.latitude,
@@ -131,11 +143,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Map any non-database statuses to the appropriate database status
       let finalStatus: OrderStatus = status;
       
-      if (status === 'pending') finalStatus = 'new';
-      if (status === 'preparing') finalStatus = 'cooking';
-      if (status === 'cancelled' && !['new', 'confirmed', 'cooking', 'ready', 'dispatched', 'delivered', 'cancelled'].includes(status)) {
-        finalStatus = 'new'; // Default fallback
-      }
+      // Convert pending or preparing to new if needed for database compatibility
+      if (status === 'pending' || status === 'preparing') finalStatus = 'new';
       
       const { error } = await supabase
         .from('orders')
@@ -204,7 +213,13 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
       if (ordersError) throw ordersError;
 
-      setVendorOrders(orders || []);
+      // Ensure orders have the required items property
+      const ordersWithItems: OrderWithItems[] = (orders || []).map((order: any) => ({
+        ...order,
+        items: order.items || []
+      }));
+
+      setVendorOrders(ordersWithItems);
     } catch (error) {
       console.error("Error fetching vendor orders:", error);
       toast({
@@ -252,9 +267,11 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         opening_time: restaurant.opening_time || null,
         closing_time: restaurant.closing_time || null,
         menu_items: menuItems || [],
-        categories,
+        menu: menuItems || [],
+        categories
       };
-
+      
+      setRestaurantDetails(fullRestaurantDetails);
       return fullRestaurantDetails;
     } catch (error) {
       console.error("Error fetching restaurant details:", error);
@@ -267,7 +284,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [toast]);
 
-  const fetchNearbyRestaurants = useCallback(async (latitude: number, longitude: number, distance = 10) => {
+  const fetchNearbyRestaurants = useCallback(async (latitude?: number, longitude?: number, distance = 10) => {
     try {
       // In a real app, we would use a spatial query here
       // For now, we'll just fetch all restaurants as a simplified example
@@ -277,16 +294,30 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      // Calculate distances (simple approximation for demo)
+      // Calculate distances if coordinates are provided
       const restaurantsWithDistance = data.map((restaurant) => {
-        if (restaurant.latitude && restaurant.longitude) {
+        let calculatedDistance = 999; // Default large distance
+        
+        if (latitude && longitude && restaurant.latitude && restaurant.longitude) {
           // Simple distance calculation (not accurate but works for demo)
           const dx = restaurant.longitude - longitude;
           const dy = restaurant.latitude - latitude;
-          const calculatedDistance = Math.sqrt(dx * dx + dy * dy) * 111; // rough conversion to km
-          return { ...restaurant, distance: calculatedDistance };
+          calculatedDistance = Math.sqrt(dx * dx + dy * dy) * 111; // rough conversion to km
         }
-        return { ...restaurant, distance: 999 }; // Far away if no coordinates
+        
+        return { 
+          ...restaurant,
+          distance: calculatedDistance,
+          city: restaurant.city || null,
+          state: restaurant.state || null,
+          zip_code: restaurant.zip_code || null,
+          phone_number: restaurant.phone_number || null,
+          website: restaurant.website || null,
+          cuisine_type: restaurant.cuisine_type || null,
+          number_of_ratings: restaurant.number_of_ratings || null,
+          opening_time: restaurant.opening_time || null,
+          closing_time: restaurant.closing_time || null
+        };
       });
       
       // Filter and sort by distance
@@ -294,33 +325,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         .filter((r) => r.distance <= distance)
         .sort((a, b) => a.distance - b.distance);
       
-      // Ensure all fields from RestaurantType are present
-      const completeRestaurants: RestaurantType[] = nearby.map(restaurant => ({
-        id: restaurant.id,
-        created_at: restaurant.created_at,
-        name: restaurant.name,
-        description: restaurant.description || null,
-        address: restaurant.address || null,
-        city: restaurant.city || null,
-        state: restaurant.state || null,
-        zip_code: restaurant.zip_code || null,
-        phone_number: restaurant.phone_number || null,
-        website: restaurant.website || null,
-        owner_id: restaurant.owner_id,
-        image_url: restaurant.image_url || null,
-        cuisine_type: restaurant.cuisine_type || null,
-        rating: restaurant.rating || null,
-        number_of_ratings: restaurant.number_of_ratings || null,
-        is_open: restaurant.is_open !== null ? restaurant.is_open : true,
-        opening_time: restaurant.opening_time || null,
-        closing_time: restaurant.closing_time || null,
-        latitude: restaurant.latitude,
-        longitude: restaurant.longitude,
-        distance: restaurant.distance,
-        updated_at: restaurant.updated_at
-      }));
-      
-      setNearbyRestaurants(completeRestaurants);
+      setNearbyRestaurants(nearby);
+      setRestaurants(nearby); // Also update restaurants for customer pages
     } catch (error) {
       console.error("Error fetching nearby restaurants:", error);
       toast({
@@ -463,8 +469,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (error) throw error;
       
       // Ensure type compatibility by properly mapping restaurant properties
-      const typedRequests: AvailabilityRequestWithItems[] = data.map((request: any) => {
-        // Ensure restaurant has all required fields
+      const typedRequests: AvailabilityRequestWithItems[] = (data || []).map((request: any) => {
+        // Ensure restaurant has all required fields from RestaurantType
         const restaurant = request.restaurant ? {
           ...request.restaurant,
           city: request.restaurant.city || null,
@@ -497,11 +503,14 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const respondToAvailabilityRequest = useCallback(async (requestId: string, estimatedTime: string, isAvailable: boolean) => {
     try {
+      // Use 'responded' instead of 'approved' to match the availability_request_status type
+      const status = isAvailable ? 'responded' : 'rejected';
+      
       const { error } = await supabase
         .from('availability_requests')
         .update({
           estimated_time: isAvailable ? estimatedTime : null,
-          status: isAvailable ? 'approved' : 'rejected',
+          status,
           updated_at: new Date().toISOString()
         })
         .eq('id', requestId);
@@ -515,7 +524,7 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           {
             ...request,
             estimated_time: isAvailable ? estimatedTime : null,
-            status: isAvailable ? 'approved' : 'rejected',
+            status: isAvailable ? 'responded' : 'rejected',
             updated_at: new Date().toISOString()
           } : 
           request
@@ -544,6 +553,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     selectedRestaurant,
     setSelectedRestaurant,
     nearbyRestaurants,
+    restaurants,
+    restaurantDetails,
     availabilityRequests,
     fetchVendorRestaurants,
     fetchVendorOrders,
@@ -555,7 +566,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     deleteRestaurant,
     fetchVendorAvailabilityRequests,
     respondToAvailabilityRequest,
-    updateRestaurantStatus
+    updateRestaurantStatus,
+    isRestaurantOpen
   };
 
   return (

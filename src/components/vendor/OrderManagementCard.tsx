@@ -63,15 +63,17 @@ const OrderManagementCard = ({ order }: OrderManagementCardProps) => {
             {order.items.map((item) => (
               <li key={item.id} className="flex justify-between">
                 <span>
-                  {item.quantity}x {item.name}
+                  {item.quantity}x {item.name || (item.menu_item && item.menu_item.name)}
                 </span>
-                <span className="text-muted-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="text-muted-foreground">
+                  ${((item.price || (item.menu_item && item.menu_item.price) || 0) * item.quantity).toFixed(2)}
+                </span>
               </li>
             ))}
           </ul>
           <div className="flex justify-between items-center mt-2 pt-2 border-t">
             <span className="font-medium">Total</span>
-            <span className="font-medium">${order.total.toFixed(2)}</span>
+            <span className="font-medium">${(order.total || 0).toFixed(2)}</span>
           </div>
         </div>
         
