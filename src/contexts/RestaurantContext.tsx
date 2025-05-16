@@ -29,6 +29,7 @@ interface RestaurantContextType {
   deleteRestaurant: (id: string) => Promise<void>;
   fetchVendorAvailabilityRequests: () => Promise<void>;
   respondToAvailabilityRequest: (requestId: string, estimatedTime: string, isAvailable: boolean) => Promise<void>;
+  updateRestaurantStatus: (restaurantId: string, isOpen: boolean) => Promise<void>; // Add the missing function
 }
 
 const RestaurantContext = createContext<RestaurantContextType | undefined>(undefined);
@@ -89,20 +90,50 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }, [user, toast]);
 
+  const updateRestaurantStatus = useCallback(async (restaurantId: string, isOpen: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('restaurants')
+        .update({ 
+          is_open: isOpen,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', restaurantId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setVendorRestaurants(prev => 
+        prev.map(restaurant => 
+          restaurant.id === restaurantId ? 
+          { ...restaurant, is_open: isOpen, updated_at: new Date().toISOString() } : 
+          restaurant
+        )
+      );
+      
+      toast({
+        title: `Restaurant ${isOpen ? 'opened' : 'closed'}`,
+        description: `Restaurant is now ${isOpen ? 'open' : 'closed'} for orders`
+      });
+    } catch (error) {
+      console.error("Error updating restaurant status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update restaurant status"
+      });
+    }
+  }, [toast]);
+
   const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus) => {
     try {
-      // Ensure status is valid according to OrderStatus type
-      if (status === 'pending') {
-        // If 'pending' comes in, convert to a valid status
-        status = 'new';
-      }
-      
-      // Check if status is one of the allowed values for orders table
+      // Ensure status is valid for the database schema
+      // Map any non-database statuses to the appropriate database status
       let finalStatus: OrderStatus = status;
       
-      // Map any status that doesn't exist in the database to an appropriate one
+      if (status === 'pending') finalStatus = 'new';
       if (status === 'preparing') finalStatus = 'cooking';
-      if (status === 'cancelled' && !['new', 'confirmed', 'cooking', 'ready', 'dispatched', 'delivered'].includes(status)) {
+      if (status === 'cancelled' && !['new', 'confirmed', 'cooking', 'ready', 'dispatched', 'delivered', 'cancelled'].includes(status)) {
         finalStatus = 'new'; // Default fallback
       }
       
@@ -207,11 +238,24 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         [...new Set(menuItems.map(item => item.category))] : 
         [];
 
-      return {
+      // Ensure all required properties from RestaurantDetailsType are present
+      const fullRestaurantDetails: RestaurantDetailsType = {
         ...restaurant,
+        city: restaurant.city || null,
+        state: restaurant.state || null,
+        zip_code: restaurant.zip_code || null,
+        phone_number: restaurant.phone_number || null,
+        website: restaurant.website || null,
+        cuisine_type: restaurant.cuisine_type || null,
+        rating: restaurant.rating || null,
+        number_of_ratings: restaurant.number_of_ratings || null,
+        opening_time: restaurant.opening_time || null,
+        closing_time: restaurant.closing_time || null,
         menu_items: menuItems || [],
         categories,
       };
+
+      return fullRestaurantDetails;
     } catch (error) {
       console.error("Error fetching restaurant details:", error);
       toast({
@@ -297,10 +341,16 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           name: data.name || '',
           description: data.description || null,
           address: data.address || null,
+          city: data.city || null,
+          state: data.state || null,
+          zip_code: data.zip_code || null,
+          phone_number: data.phone_number || null,
+          website: data.website || null,
           owner_id: user.id,
           latitude: data.latitude || 0,
           longitude: data.longitude || 0,
           image_url: data.image_url || null,
+          cuisine_type: data.cuisine_type || null,
           is_open: true,
         });
         
@@ -412,7 +462,29 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       if (error) throw error;
       
-      setAvailabilityRequests(data || []);
+      // Ensure type compatibility by properly mapping restaurant properties
+      const typedRequests: AvailabilityRequestWithItems[] = data.map((request: any) => {
+        // Ensure restaurant has all required fields
+        const restaurant = request.restaurant ? {
+          ...request.restaurant,
+          city: request.restaurant.city || null,
+          state: request.restaurant.state || null,
+          zip_code: request.restaurant.zip_code || null,
+          phone_number: request.restaurant.phone_number || null,
+          website: request.restaurant.website || null,
+          cuisine_type: request.restaurant.cuisine_type || null,
+          number_of_ratings: request.restaurant.number_of_ratings || null,
+          opening_time: request.restaurant.opening_time || null,
+          closing_time: request.restaurant.closing_time || null
+        } : undefined;
+
+        return {
+          ...request,
+          restaurant
+        };
+      });
+      
+      setAvailabilityRequests(typedRequests);
     } catch (error) {
       console.error("Error fetching availability requests:", error);
       toast({
@@ -482,7 +554,8 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     updateRestaurant,
     deleteRestaurant,
     fetchVendorAvailabilityRequests,
-    respondToAvailabilityRequest
+    respondToAvailabilityRequest,
+    updateRestaurantStatus
   };
 
   return (

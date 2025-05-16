@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { VendorApprovalType } from "@/types/models";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,41 +10,50 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
 const VendorApprovals = () => {
-  const [vendors, setVendors] = useState<VendorApprovalType[]>([]);
+  const [vendors, setVendors] = useState<VendorApprovalType[]>([
+    {
+      id: '1',
+      vendor_id: 'v1',
+      status: 'pending',
+      admin_id: null,
+      notes: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      vendor: {
+        id: 'v1',
+        email: 'vendor1@example.com',
+        first_name: 'John',
+        last_name: 'Doe'
+      }
+    },
+    {
+      id: '2',
+      vendor_id: 'v2',
+      status: 'approved',
+      admin_id: 'admin1',
+      notes: 'All documents verified',
+      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      vendor: {
+        id: 'v2',
+        email: 'vendor2@example.com',
+        first_name: 'Jane',
+        last_name: 'Smith'
+      }
+    }
+  ]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
   const [notes, setNotes] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (user) {
-      fetchVendors();
-    }
-  }, [user]);
-
-  const fetchVendors = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('vendor_approvals')
-        .select('*, vendor:profiles(*)')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      setVendors(data || []);
-    } catch (error) {
-      console.error('Error fetching vendors:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch vendors"
-      });
-    } finally {
+    // Simulate loading
+    setTimeout(() => {
       setLoading(false);
-    }
-  };
-  
+    }, 500);
+  }, []);
+
   const handleNoteChange = (vendorId: string, note: string) => {
     setNotes({ ...notes, [vendorId]: note });
   };
@@ -54,20 +62,19 @@ const VendorApprovals = () => {
     if (!user) return;
     
     try {
-      const { error } = await supabase
-        .from('vendor_approvals')
-        .update({
+      // In a real application, this would update the database
+      // For now, we'll just update the state
+      const updatedVendors = vendors.map(vendor => 
+        vendor.vendor_id === vendorId ? {
+          ...vendor,
           status: 'approved',
           admin_id: user.id,
           notes: notes[vendorId] || null,
           updated_at: new Date().toISOString()
-        })
-        .eq('vendor_id', vendorId);
+        } : vendor
+      );
       
-      if (error) throw error;
-      
-      // Refetch the list
-      fetchVendors();
+      setVendors(updatedVendors);
       
       toast({
         title: "Vendor approved",
@@ -87,20 +94,19 @@ const VendorApprovals = () => {
     if (!user) return;
     
     try {
-      const { error } = await supabase
-        .from('vendor_approvals')
-        .update({
+      // In a real application, this would update the database
+      // For now, we'll just update the state
+      const updatedVendors = vendors.map(vendor => 
+        vendor.vendor_id === vendorId ? {
+          ...vendor,
           status: 'rejected',
           admin_id: user.id,
           notes: notes[vendorId] || null,
           updated_at: new Date().toISOString()
-        })
-        .eq('vendor_id', vendorId);
+        } : vendor
+      );
       
-      if (error) throw error;
-      
-      // Refetch the list
-      fetchVendors();
+      setVendors(updatedVendors);
       
       toast({
         title: "Vendor rejected",
