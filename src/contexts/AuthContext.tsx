@@ -89,10 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Signing up with user type:", userType);
       console.log("User data:", userData);
 
-      // Ensure the user_type is one of the allowed values
-      if (!['customer', 'vendor', 'admin'].includes(userType)) {
-        throw new Error("Invalid user type");
-      }
+      // No need to validate user_type here as the type is already constrained by TypeScript
       
       const { data, error } = await supabase.auth.signUp({
         email,

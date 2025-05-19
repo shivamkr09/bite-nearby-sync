@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import ThemeToggle from "../common/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileBottomNav from "./MobileBottomNav";
 
 const VendorLayout = () => {
   const { user, signOut } = useAuth();
@@ -130,10 +131,13 @@ const VendorLayout = () => {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 pb-20">
+      {/* Main content - add padding at bottom for mobile navigation */}
+      <main className="flex-1 container mx-auto px-4 pb-20 md:pb-8">
         <Outlet />
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };

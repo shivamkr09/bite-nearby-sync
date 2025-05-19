@@ -11,6 +11,9 @@ const CartItem = ({ item }: CartItemProps) => {
   const { id, name, price, quantity } = item;
   const { updateQuantity, removeFromCart } = useOrder();
 
+  // Ensure price is a number for calculations to prevent NaN
+  const itemPrice = typeof price === 'number' ? price : parseFloat(price as any) || 0;
+
   return (
     <div className="flex items-center justify-between py-2 border-b">
       <div className="flex-1">
@@ -36,7 +39,7 @@ const CartItem = ({ item }: CartItemProps) => {
             </Button>
           </div>
           <div className="text-right">
-            <span className="font-medium">${(price * quantity).toFixed(2)}</span>
+            <span className="font-medium">${(itemPrice * quantity).toFixed(2)}</span>
           </div>
         </div>
       </div>

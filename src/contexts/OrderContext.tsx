@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,7 +111,17 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         description: "You can only order from one restaurant at a time. Your cart will be cleared.",
         variant: "destructive"
       });
-      setCart([{ id: item.id, menuItem: item, quantity: 1 }]);
+      
+      // Ensure price is a number
+      const price = typeof item.price === 'number' ? item.price : parseFloat(item.price as any) || 0;
+      
+      setCart([{ 
+        id: item.id, 
+        menuItem: item, 
+        quantity: 1,
+        name: item.name,
+        price: price
+      }]);
       setCurrentRestaurantId(restaurantId);
       return;
     }
@@ -125,6 +134,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Check if item already in cart
     const existingItemIndex = cart.findIndex(cartItem => cartItem.id === item.id);
     
+    // Ensure price is a number
+    const price = typeof item.price === 'number' ? item.price : parseFloat(item.price as any) || 0;
+    
     if (existingItemIndex > -1) {
       // Update quantity of existing item
       const updatedCart = [...cart];
@@ -135,7 +147,9 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCart([...cart, { 
         id: item.id, 
         menuItem: item, 
-        quantity: 1 
+        quantity: 1,
+        name: item.name,
+        price: price 
       }]);
     }
     

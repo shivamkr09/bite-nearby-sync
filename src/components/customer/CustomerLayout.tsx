@@ -14,6 +14,7 @@ import { useOrder } from "@/contexts/OrderContext";
 import { useState } from "react";
 import ThemeToggle from "../common/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileBottomNav from "./MobileBottomNav";
 
 const CustomerLayout = () => {
   const { user, signOut } = useAuth();
@@ -45,8 +46,9 @@ const CustomerLayout = () => {
           <div className="flex items-center space-x-3">
             <ThemeToggle />
             
-            <Link to="/customer/cart" className="relative">
-              <ShoppingCart className={isMobile ? "h-5 w-5" : "h-6 w-6"} />
+            {/* Only show cart icon in header on larger screens */}
+            <Link to="/customer/cart" className="relative md:block hidden">
+              <ShoppingCart className="h-6 w-6" />
               {totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {totalItems}
@@ -139,10 +141,13 @@ const CustomerLayout = () => {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 container mx-auto px-4 pb-20">
+      {/* Main content - add padding at bottom for mobile navigation */}
+      <main className="flex-1 container mx-auto px-4 pb-20 md:pb-8">
         <Outlet />
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 };
