@@ -11,8 +11,9 @@ const CartItem = ({ item }: CartItemProps) => {
   const { id, name, price, quantity } = item;
   const { updateQuantity, removeFromCart } = useOrder();
 
-  // Ensure price is a number for calculations to prevent NaN
-  const itemPrice = typeof price === 'number' ? price : parseFloat(price as any) || 0;
+  // Ensure price is always a valid number for calculations
+  const itemPrice = typeof price === 'number' ? price : 
+                   typeof price === 'string' ? parseFloat(price) || 0 : 0;
 
   return (
     <div className="flex items-center justify-between py-2 border-b">

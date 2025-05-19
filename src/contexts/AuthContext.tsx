@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
@@ -89,7 +90,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Signing up with user type:", userType);
       console.log("User data:", userData);
 
-      // No need to validate user_type here as the type is already constrained by TypeScript
+      // Validate user_type before sending to the API
+      if (userType !== 'customer' && userType !== 'vendor' && userType !== 'admin') {
+        throw new Error("Invalid user type");
+      }
       
       const { data, error } = await supabase.auth.signUp({
         email,

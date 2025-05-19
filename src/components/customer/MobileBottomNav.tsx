@@ -1,14 +1,10 @@
 
-import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, ShoppingCart, User } from 'lucide-react';
-import { useOrder } from "@/contexts/OrderContext";
+import { Home, MapPin, ShoppingBag, User } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const MobileBottomNav = () => {
   const location = useLocation();
-  const { cart } = useOrder();
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Check if the current route is active
   const isActive = (path: string) => {
@@ -30,30 +26,14 @@ const MobileBottomNav = () => {
         </Link>
         
         <Link 
-          to="/customer/search" 
+          to="/customer/map" 
           className={cn(
             "flex flex-col items-center text-xs p-1", 
-            isActive("/customer/search") ? "text-primary" : "text-muted-foreground"
+            isActive("/customer/map") ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <Search className="h-5 w-5 mb-1" />
-          <span>Search</span>
-        </Link>
-        
-        <Link 
-          to="/customer/cart" 
-          className={cn(
-            "flex flex-col items-center text-xs p-1 relative", 
-            isActive("/customer/cart") ? "text-primary" : "text-muted-foreground"
-          )}
-        >
-          <ShoppingCart className="h-5 w-5 mb-1" />
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-          <span>Cart</span>
+          <MapPin className="h-5 w-5 mb-1" />
+          <span>Nearby</span>
         </Link>
         
         <Link 
@@ -63,8 +43,19 @@ const MobileBottomNav = () => {
             isActive("/customer/orders") ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <User className="h-5 w-5 mb-1" />
+          <ShoppingBag className="h-5 w-5 mb-1" />
           <span>Orders</span>
+        </Link>
+        
+        <Link 
+          to="/customer/profile" 
+          className={cn(
+            "flex flex-col items-center text-xs p-1", 
+            isActive("/customer/profile") ? "text-primary" : "text-muted-foreground"
+          )}
+        >
+          <User className="h-5 w-5 mb-1" />
+          <span>Profile</span>
         </Link>
       </div>
     </div>
