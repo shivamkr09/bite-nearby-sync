@@ -10,6 +10,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const CartPage = () => {
   const navigate = useNavigate();
   const { 
@@ -28,6 +34,19 @@ const CartPage = () => {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
   const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  function loadScript(src:any) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script')
+      script.src = src
+      script.onload = () => {
+        resolve(true)
+      }
+      script.onerror = () => {
+        resolve(false)
+      }
+      document.body.appendChild(script)
+    })
+  }
   
   const handleCheckAvailability = async () => {
     setIsCheckingAvailability(true);
@@ -43,7 +62,48 @@ const CartPage = () => {
     
     setIsPlacingOrder(true);
     try {
-      await useOrder().placeOrder(address, phone);
+      // await useOrder().placeOrder(address, phone);
+      const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
+
+      if (!res){
+        alert('Razropay failed to load!!')
+        return 
+      }
+
+      const data = await fetch('/api/functions/v1/razorpay-payment-handler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: "5000",
+          currency: "INR",
+          receipt: "fffff",
+          payment_capture: 1,
+        }),
+      }).then((t) => t.json());
+
+      console.log(data)
+
+    const options = {
+      "key": "rzp_test_s5u7dIraqdLSFW", // Enter the Key ID generated from the Dashboard
+      "amount": "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+      "currency": "INR",
+      "name": "Acme Corp",
+      "description": "Test Transaction",
+      "image": "https://example.com/your_logo",
+      "order_id": "order_IluGWxBm9U8zJ8", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+      "callback_url":"http://localhost:1769/verify",
+      "notes": {
+          "address": "Razorpay Corporate Office"
+      },
+      "theme": {
+          "color": "#3399cc"
+      }
+  };
+  const paymentObject = new window.Razorpay(options); 
+  paymentObject.open();
+      
       setShowCheckoutDialog(false);
       navigate('/customer/orders');
     } finally {
