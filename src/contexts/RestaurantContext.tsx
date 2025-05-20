@@ -16,12 +16,14 @@ interface RestaurantContextType {
   restaurants: RestaurantType[]; 
   restaurantDetails: RestaurantType | null;
   availabilityRequests: AvailabilityRequestWithItems[];
+  isLoading: boolean;
   fetchVendorRestaurants: () => Promise<void>;
   fetchVendorOrders: () => Promise<void>;
   fetchRestaurantDetails: (id: string) => Promise<any | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   setSelectedRestaurant: React.Dispatch<React.SetStateAction<RestaurantType | null>>;
   fetchNearbyRestaurants: (latitude?: number, longitude?: number, distance?: number) => Promise<void>;
+  searchRestaurants: (query: string) => Promise<void>;
   createRestaurant: (data: Partial<RestaurantType>) => Promise<void>;
   updateRestaurant: (id: string, data: Partial<RestaurantType>) => Promise<void>;
   deleteRestaurant: (id: string) => Promise<void>;
@@ -59,11 +61,13 @@ export const RestaurantProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     restaurants: nearbyRestaurantsHook.restaurants,
     restaurantDetails: restaurantDetailsHook.restaurantDetails,
     availabilityRequests: availabilityRequestsHook.availabilityRequests,
+    isLoading: nearbyRestaurantsHook.isLoading,
     fetchVendorRestaurants: vendorRestaurantsHook.fetchVendorRestaurants,
     fetchVendorOrders: vendorOrdersHook.fetchVendorOrders,
     fetchRestaurantDetails: restaurantDetailsHook.fetchRestaurantDetails,
     updateOrderStatus: vendorOrdersHook.updateOrderStatus,
     fetchNearbyRestaurants: nearbyRestaurantsHook.fetchNearbyRestaurants,
+    searchRestaurants: nearbyRestaurantsHook.searchRestaurants,
     createRestaurant: vendorRestaurantsHook.createRestaurant,
     updateRestaurant: vendorRestaurantsHook.updateRestaurant,
     deleteRestaurant: vendorRestaurantsHook.deleteRestaurant,

@@ -42,7 +42,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: RestaurantType }) => {
         <CardFooter className="px-4 py-2 border-t bg-secondary/50">
           <div className="flex justify-between items-center w-full">
             <span className="text-sm text-muted-foreground">
-              {distance !== undefined ? `${distance.toFixed(2)} km away` : 'Distance unknown'}
+              {distance !== undefined && distance < 900 ? `${distance.toFixed(2)} km away` : ''}
             </span>
           </div>
         </CardFooter>

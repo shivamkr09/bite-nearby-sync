@@ -2,26 +2,50 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import RestaurantCard from "@/components/customer/RestaurantCard";
 import { useLocation } from "@/contexts/LocationContext";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const RestaurantsPage = () => {
   const { userLocation, locationError, requestLocationPermission, isLoading: locationLoading } = useLocation();
-  const { restaurants, fetchNearbyRestaurants } = useRestaurant();
+  const { restaurants, fetchNearbyRestaurants, searchRestaurants, isLoading: restaurantsLoading } = useRestaurant();
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationSearchQuery, setLocationSearchQuery] = useState("");
   
   useEffect(() => {
+    // Fetch restaurants on component mount - with or without location
     if (userLocation) {
       // Pass userLocation coordinates to fetchNearbyRestaurants
       fetchNearbyRestaurants(userLocation.latitude, userLocation.longitude);
     } else {
-      // Fetch all restaurants if location not available - pass default parameters
-      fetchNearbyRestaurants(undefined, undefined);
+      // Fetch all restaurants if location not available - pass undefined parameters
+      fetchNearbyRestaurants();
     }
   }, [userLocation, fetchNearbyRestaurants]);
   
+  // Handle text search
+  const handleSearch = () => {
+    if (searchQuery.trim() !== "") {
+      searchRestaurants(searchQuery);
+    } else {
+      // Reset to standard fetch if search is cleared
+      if (userLocation) {
+        fetchNearbyRestaurants(userLocation.latitude, userLocation.longitude);
+      } else {
+        fetchNearbyRestaurants();
+      }
+    }
+  };
+
+  // Handle location search submission
+  const handleLocationSearch = () => {
+    if (locationSearchQuery.trim() !== "") {
+      searchRestaurants(locationSearchQuery);
+    }
+  };
+
+  // Filter restaurants by name/description for the name search input
   const filteredRestaurants = searchQuery
     ? restaurants.filter(restaurant => 
         restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -29,10 +53,14 @@ const RestaurantsPage = () => {
       )
     : restaurants;
 
+  const isAnyRestaurant = filteredRestaurants.length > 0;
+  const isLoading = locationLoading || restaurantsLoading;
+
   return (
     <div className="py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Nearby Restaurants</h1>
+        <h1 className="text-2xl font-bold mb-2">Restaurants</h1>
+        
         {userLocation ? (
           <div className="flex items-center text-sm text-muted-foreground">
             <MapPin className="h-4 w-4 mr-1" />
@@ -41,57 +69,78 @@ const RestaurantsPage = () => {
             </span>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            <Button 
-              onClick={() => requestLocationPermission()} 
-              disabled={locationLoading}
-            >
-              {locationLoading ? 'Detecting Location...' : 'Enable Location'}
-            </Button>
-            {locationError && (
-              <p className="text-sm text-destructive">{locationError}</p>
-            )}
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              Search for restaurants by name or location
+            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <Button 
+                onClick={() => requestLocationPermission()} 
+                variant="outline"
+                disabled={locationLoading}
+              >
+                {locationLoading ? 'Detecting Location...' : 'Use My Location'}
+              </Button>
+              {locationError && (
+                <p className="text-sm text-destructive">{locationError}</p>
+              )}
+            </div>
           </div>
         )}
       </div>
       
-      <div className="mb-6">
-        <Input
-          type="text"
-          placeholder="Search restaurants..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      {/* Location search */}
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Search by location or address..."
+            value={locationSearchQuery}
+            onChange={(e) => setLocationSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleLocationSearch} disabled={isLoading}>
+            <Search className="h-4 w-4 mr-2" />
+            Find
+          </Button>
+        </div>
       </div>
       
-      {locationLoading ? (
+      {/* Name/description search */}
+      <div className="mb-6">
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Search by restaurant name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button onClick={handleSearch} disabled={isLoading}>
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+      </div>
+      
+      {isLoading ? (
         <div className="text-center py-8">
-          <div className="animate-pulse-light">
-            <p className="text-xl font-medium">Detecting your location...</p>
-            <p className="text-sm text-muted-foreground mt-2">We'll show you nearby restaurants soon!</p>
+          <div className="animate-pulse">
+            <p className="text-xl font-medium">Loading restaurants...</p>
+            <p className="text-sm text-muted-foreground mt-2">Please wait</p>
           </div>
         </div>
-      ) : userLocation ? (
-        filteredRestaurants.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-xl font-medium">No restaurants found nearby</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              There are no restaurants within 1km of your location 
-              {searchQuery && " matching your search"}
-            </p>
-          </div>
-        )
+      ) : isAnyRestaurant ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredRestaurants.map((restaurant) => (
+            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+          ))}
+        </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-xl font-medium">Enable location to see nearby restaurants</p>
+          <p className="text-xl font-medium">No restaurants found</p>
           <p className="text-sm text-muted-foreground mt-2">
-            We need your location to find restaurants within 1km of you
+            Try a different search term or location
           </p>
         </div>
       )}
