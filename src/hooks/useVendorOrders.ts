@@ -68,7 +68,7 @@ export function useVendorOrders(userId: string | undefined) {
 
       setVendorOrders(ordersWithItems);
       
-      // Return cleanup function instead of return value
+      // Return cleanup function
       return () => {
         supabase.removeChannel(channel);
       };
