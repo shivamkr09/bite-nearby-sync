@@ -96,7 +96,8 @@ const CartPage = () => {
       const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
 
       if (!res){
-        alert('Razropay failed to load!!')
+        alert('Razropay failed to load!!');
+        setIsPlacingOrder(false);
         return 
       }
 
@@ -148,6 +149,13 @@ const CartPage = () => {
         if (verifyData.success) {
           // Place the order after successful payment verification
           // await useOrder().placeOrder(address, phone);
+          await placeOrder(address, phone);
+            setShowCheckoutDialog(false);
+            navigate('/customer/orders');
+            toast({
+              title: "Order placed successfully!",
+              description: "You can track your order status in the Orders page"
+            });
           setShowCheckoutDialog(false);
           navigate('/customer/orders');
         } else {
@@ -158,13 +166,7 @@ const CartPage = () => {
   const paymentObject = new window.Razorpay(options); 
   paymentObject.open();
       
-      setShowCheckoutDialog(false);
-      await placeOrder(address, phone);
-      navigate('/customer/orders');
-      toast({
-        title: "Order placed successfully!",
-        description: "You can track your order status in the Orders page"
-      });
+     
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
