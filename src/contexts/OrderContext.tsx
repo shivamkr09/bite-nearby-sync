@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,31 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (user) {
       fetchOrders();
     }
+  }, [user]);
+
+  // Set up realtime subscription for order updates
+  useEffect(() => {
+    if (!user) return;
+    
+    const channel = supabase
+      .channel('customer-orders-changes')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `customer_id=eq.${user.id}`
+        }, 
+        (payload) => {
+          // Refresh orders when there's a change
+          fetchOrders();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const fetchOrders = async () => {
@@ -325,6 +351,12 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       
       if (restaurantError) throw restaurantError;
       
+      // Calculate correct total from cart items
+      const calculatedTotal = cart.reduce((sum, item) => {
+        const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
+        return sum + (itemPrice * item.quantity);
+      }, 0);
+      
       // Insert the order
       const { data: orderData, error: orderError } = await supabase
         .from('orders')
@@ -333,7 +365,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           restaurant_id: currentRestaurantId,
           customer_name: `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim(),
           restaurant_name: restaurant.name,
-          total: cart.reduce((sum, item) => sum + (item.menuItem.price * item.quantity), 0),
+          total: calculatedTotal,
           status: 'new',
           estimated_time: availabilityResponse.estimatedTime,
           address,
@@ -350,7 +382,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         menu_item_id: item.id,
         name: item.menuItem.name,
         description: item.menuItem.description,
-        price: item.menuItem.price,
+        price: item.price,
         quantity: item.quantity
       }));
       

@@ -1,10 +1,14 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, ShoppingBag, User } from 'lucide-react';
+import { Home, MapPin, ShoppingBag, User, ShoppingCart } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useOrder } from '@/contexts/OrderContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
+  const { cart } = useOrder();
+  
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Check if the current route is active
   const isActive = (path: string) => {
@@ -26,14 +30,19 @@ const MobileBottomNav = () => {
         </Link>
         
         <Link 
-          to="/customer/map" 
+          to="/customer/cart" 
           className={cn(
-            "flex flex-col items-center text-xs p-1", 
-            isActive("/customer/map") ? "text-primary" : "text-muted-foreground"
+            "flex flex-col items-center text-xs p-1 relative", 
+            isActive("/customer/cart") ? "text-primary" : "text-muted-foreground"
           )}
         >
-          <MapPin className="h-5 w-5 mb-1" />
-          <span>Nearby</span>
+          <ShoppingCart className="h-5 w-5 mb-1" />
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 bg-primary text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+              {totalItems}
+            </span>
+          )}
+          <span>Cart</span>
         </Link>
         
         <Link 
