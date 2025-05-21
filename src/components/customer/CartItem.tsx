@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { useOrder, CartItemType } from "@/contexts/OrderContext";
+import { useOrder } from "@/contexts/order/OrderContext";
+import { CartItemType } from "@/contexts/order/types";
 import { Minus, Plus, X } from "lucide-react";
 
 interface CartItemProps {

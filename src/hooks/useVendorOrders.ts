@@ -33,12 +33,32 @@ export function useVendorOrders(userId: string | undefined) {
         .from('orders')
         .select(`
           *,
-          items:order_items(*)
+          items:order_items(
+            *,
+            menu_item:menu_items(*)
+          )
         `)
         .in('restaurant_id', restaurantIds)
         .order('created_at', { ascending: false });
         
       if (ordersError) throw ordersError;
+
+      // Set up real-time subscription for new orders
+      const channel = supabase
+        .channel('vendor-orders-changes')
+        .on('postgres_changes', 
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `restaurant_id=in.(${restaurantIds.map(id => `'${id}'`).join(',')})`
+          }, 
+          (payload) => {
+            // Refresh orders when there's a change
+            fetchVendorOrders();
+          }
+        )
+        .subscribe();
 
       // Ensure orders have the required items property
       const ordersWithItems: OrderWithItems[] = (orders || []).map((order: any) => ({
@@ -47,6 +67,11 @@ export function useVendorOrders(userId: string | undefined) {
       }));
 
       setVendorOrders(ordersWithItems);
+      
+      // Return cleanup function
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } catch (error) {
       console.error("Error fetching vendor orders:", error);
       toast({
@@ -60,7 +85,7 @@ export function useVendorOrders(userId: string | undefined) {
   const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus) => {
     try {
       // Ensure status is valid for the database schema
-      // Map any non-database statuses to the appropriate database status
+      // Map any non-standard statuses to the appropriate database status
       let dbStatus: "new" | "confirmed" | "cooking" | "ready" | "dispatched" | "delivered";
       
       // Convert non-standard statuses to database-compatible ones

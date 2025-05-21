@@ -9,6 +9,7 @@ import { useOrder } from "@/contexts/OrderContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 
 declare global {
   interface Window {
@@ -18,12 +19,14 @@ declare global {
 
 const CartPage = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { 
     cart, 
     clearCart, 
     currentRestaurantId, 
     sendAvailabilityRequest, 
-    availabilityResponse 
+    availabilityResponse,
+    placeOrder
   } = useOrder();
   
   const [estimatedTimeQuery, setEstimatedTimeQuery] = useState("How long will my order take?");
@@ -33,7 +36,11 @@ const CartPage = () => {
   const [phone, setPhone] = useState("");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Ensure prices are properly calculated
+  const total = cart.reduce((sum, item) => {
+    const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
+    return sum + (itemPrice * item.quantity);
+  }, 0);
   function loadScript(src:any) {
     return new Promise((resolve) => {
       const script = document.createElement('script')
@@ -49,20 +56,43 @@ const CartPage = () => {
   }
   
   const handleCheckAvailability = async () => {
+    if (!currentRestaurantId) {
+      toast({
+        variant: "destructive",
+        title: "No restaurant selected",
+        description: "Please select a restaurant first"
+      });
+      return;
+    }
+    
     setIsCheckingAvailability(true);
     try {
       await sendAvailabilityRequest(estimatedTimeQuery);
+    } catch (error) {
+      console.error("Error checking availability:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not check availability"
+      });
     } finally {
       setIsCheckingAvailability(false);
     }
   };
   
   const handlePlaceOrder = async () => {
-    if (!address || !phone) return;
+    if (!address || !phone) {
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please provide both delivery address and phone number"
+      });
+      return;
+    }
     
     setIsPlacingOrder(true);
     try {
-      // await useOrder().placeOrder(address, phone);
+      
       const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
 
       if (!res){
@@ -129,7 +159,19 @@ const CartPage = () => {
   paymentObject.open();
       
       setShowCheckoutDialog(false);
+      await placeOrder(address, phone);
       navigate('/customer/orders');
+      toast({
+        title: "Order placed successfully!",
+        description: "You can track your order status in the Orders page"
+      });
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast({
+        variant: "destructive",
+        title: "Error placing order",
+        description: "Please try again later"
+      });
     } finally {
       setIsPlacingOrder(false);
     }

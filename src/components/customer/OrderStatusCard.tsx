@@ -1,89 +1,172 @@
 
-import { OrderStatus, OrderType } from "@/types/models";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
+import { format } from "date-fns";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Clock, PackageCheck, PackageOpen, ShoppingBag, Truck } from "lucide-react";
+import { OrderWithItems } from "@/types/models";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface OrderStatusCardProps {
-  order: OrderType;
+  order: OrderWithItems;
 }
 
 const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
-  const { id, restaurant_name, status, created_at } = order;
-  const total = order.total_amount || order.total || 0;
-  const estimatedTime = order.estimated_time || "15-30 min";
-  
-  const getStatusLabel = () => {
-    switch (status) {
-      case 'new': return 'Order received';
-      case 'pending': return 'Order received';
-      case 'confirmed': return 'Order confirmed';
+  const [showDetails, setShowDetails] = useState(false);
+
+  const getStatusIcon = () => {
+    switch (order.status) {
+      case 'new':
+      case 'confirmed':
+        return <Clock className="h-5 w-5 text-warning-500" />;
       case 'cooking':
-      case 'preparing': return 'Preparing your food';
-      case 'ready': return 'Ready for pickup/delivery';
-      case 'dispatched': return 'Out for delivery';
-      case 'delivered': return 'Delivered';
-      case 'cancelled': return 'Cancelled';
-      default: return 'Unknown status';
+        return <ShoppingBag className="h-5 w-5 text-warning-500" />;
+      case 'ready':
+        return <PackageOpen className="h-5 w-5 text-success-500" />;
+      case 'dispatched':
+        return <Truck className="h-5 w-5 text-primary" />;
+      case 'delivered':
+        return <CheckCircle2 className="h-5 w-5 text-success-500" />;
+      default:
+        return <Clock className="h-5 w-5 text-muted-foreground" />;
     }
   };
 
-  const getStatusPercentage = () => {
-    switch (status) {
-      case 'new': 
-      case 'pending': return 10;
-      case 'confirmed': return 25;
+  const getStatusText = () => {
+    switch (order.status) {
+      case 'new':
+        return 'Order received';
+      case 'confirmed':
+        return 'Order confirmed';
       case 'cooking':
-      case 'preparing': return 50;
-      case 'ready': return 75;
-      case 'dispatched': return 85;
-      case 'delivered': return 100;
-      case 'cancelled': return 0;
-      default: return 0;
+        return 'Preparing your food';
+      case 'ready':
+        return 'Your order is ready';
+      case 'dispatched':
+        return 'On the way to you';
+      case 'delivered':
+        return 'Order delivered';
+      default:
+        return 'Processing';
     }
   };
 
-  // Safely calculate item count
-  const itemCount = order.items ? order.items.reduce((acc, item) => acc + item.quantity, 0) : 1;
+  const getStatusBadgeVariant = () => {
+    switch (order.status) {
+      case 'delivered':
+        return 'success';
+      case 'ready':
+        return 'success';
+      case 'dispatched':
+        return 'secondary';
+      case 'cooking':
+        return 'warning';
+      case 'confirmed':
+      case 'new':
+        return 'default';
+      default:
+        return 'outline';
+    }
+  };
+
+  const orderDate = new Date(order.created_at);
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">{restaurant_name || "Restaurant"}</CardTitle>
-          <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(created_at), { addSuffix: true })}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+    <>
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">
+              Order from {order.restaurant_name}
+            </CardTitle>
+            <Badge variant={getStatusBadgeVariant() as any}>
+              {getStatusText()}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {format(orderDate, 'MMMM d, yyyy - h:mm a')}
+          </p>
+        </CardHeader>
+        <CardContent className="pb-2">
+          <div className="flex items-center mb-4">
+            {getStatusIcon()}
+            <div className="ml-3">
+              <p className="text-sm font-medium">{getStatusText()}</p>
+              {order.estimated_time && (
+                <p className="text-sm text-muted-foreground">
+                  Estimated time: {order.estimated_time}
+                </p>
+              )}
+            </div>
+          </div>
           <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="font-medium">{getStatusLabel()}</span>
-              <span className="text-muted-foreground">Est. time: {estimatedTime}</span>
+            <p className="text-sm">
+              <span className="font-medium">Items:</span>{' '}
+              {order.items.reduce((acc, item) => acc + item.quantity, 0)}
+            </p>
+            <p className="text-sm">
+              <span className="font-medium">Total:</span> ${order.total.toFixed(2)}
+            </p>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button variant="outline" className="w-full" onClick={() => setShowDetails(true)}>
+            View Details
+          </Button>
+        </CardFooter>
+      </Card>
+      
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Order Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-1">Restaurant</h3>
+              <p className="text-sm">{order.restaurant_name}</p>
             </div>
-            <div className="w-full bg-secondary rounded-full h-2.5">
-              <div 
-                className="bg-primary h-2.5 rounded-full transition-all duration-500 ease-in-out" 
-                style={{ width: `${getStatusPercentage()}%` }}
-              ></div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-1">Delivery Address</h3>
+              <p className="text-sm">{order.address || "No address provided"}</p>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-1">Contact</h3>
+              <p className="text-sm">{order.phone || "No phone provided"}</p>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-1">Items</h3>
+              <ul className="space-y-1">
+                {order.items.map((item) => (
+                  <li key={item.id} className="text-sm flex justify-between">
+                    <span>
+                      {item.quantity}x {item.name || (item.menu_item && item.menu_item.name)}
+                    </span>
+                    <span className="text-muted-foreground">
+                      ${((item.price || (item.menu_item && item.menu_item.price) || 0) * item.quantity).toFixed(2)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                <span className="text-sm font-medium">Total</span>
+                <span className="text-sm font-medium">${order.total.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="bg-muted/40 p-3 rounded-md">
+              <p className="text-xs text-center text-muted-foreground">
+                Order #{order.id.substring(0, 8)}
+              </p>
             </div>
           </div>
-          
-          <div className="space-y-1">
-            <div className="text-sm font-medium">Order #{id.substring(id.length - 6)}</div>
-            <div className="text-sm text-muted-foreground">
-              {itemCount} items · ${total.toFixed(2)}
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <span className={`status-indicator status-${status}`}></span>
-            <span className="text-sm capitalize">{status}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

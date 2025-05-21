@@ -18,7 +18,7 @@ interface RestaurantContextType {
   availabilityRequests: AvailabilityRequestWithItems[];
   isLoading: boolean;
   fetchVendorRestaurants: () => Promise<void>;
-  fetchVendorOrders: () => Promise<void>;
+  fetchVendorOrders: () => Promise<void | (() => void)>; // Updated return type to handle cleanup function
   fetchRestaurantDetails: (id: string) => Promise<any | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   setSelectedRestaurant: React.Dispatch<React.SetStateAction<RestaurantType | null>>;
