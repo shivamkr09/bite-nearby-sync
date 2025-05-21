@@ -1,8 +1,8 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, ShoppingBag, User, ShoppingCart } from 'lucide-react';
+import { Home, ShoppingBag, User, ShoppingCart } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useOrder } from '@/contexts/OrderContext';
+import { useOrder } from '@/contexts/order/OrderContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
