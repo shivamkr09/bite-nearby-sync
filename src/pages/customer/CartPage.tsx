@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
+
 declare global {
   interface Window {
     Razorpay: any;
@@ -100,8 +101,12 @@ const CartPage = () => {
         setIsPlacingOrder(false);
         return 
       }
+      let isProd=import.meta.env.VITE_ENV === 'production';
+      const prodUrl = 'https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-handler';
+      const devUrl = '/api/functions/v1/razorpay-payment-handler';
+      const actualUrl = isProd ? prodUrl : devUrl;
 
-      const data = await fetch('/api/functions/v1/razorpay-payment-handler', {
+      const data = await fetch(`${actualUrl}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,8 +137,12 @@ const CartPage = () => {
       },
       handler: async function (response: any) {
         console.log(response);
+         let isProd=import.meta.env.VITE_ENV === 'production';
+      const prodUrl = 'https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification';
+      const devUrl = '/razorpay-payment-verification';
+      const actualUrl = isProd ? prodUrl : devUrl;
         // Verify payment on your backend
-        const verifyRes = await fetch('/razorpay-payment-verification', {
+        const verifyRes = await fetch(`${actualUrl}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
