@@ -3,6 +3,14 @@
     {
       "source": "/(.*)",
       "destination": "/"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "https://msfzehtlunkptuegwukh.supabase.co/$1"
+    },
+    {
+      "source": "/razorpay-payment-verification/(.*)",
+      "destination": "https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification/$1"
     }
   ]
 }
