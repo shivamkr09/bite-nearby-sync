@@ -11,6 +11,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 const CartPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +41,19 @@ const CartPage = () => {
     const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
     return sum + (itemPrice * item.quantity);
   }, 0);
+  function loadScript(src:any) {
+    return new Promise((resolve) => {
+      const script = document.createElement('script')
+      script.src = src
+      script.onload = () => {
+        resolve(true)
+      }
+      script.onerror = () => {
+        resolve(false)
+      }
+      document.body.appendChild(script)
+    })
+  }
   
   const handleCheckAvailability = async () => {
     if (!currentRestaurantId) {
@@ -73,13 +92,81 @@ const CartPage = () => {
     
     setIsPlacingOrder(true);
     try {
-      await placeOrder(address, phone);
-      setShowCheckoutDialog(false);
-      navigate('/customer/orders');
-      toast({
-        title: "Order placed successfully!",
-        description: "You can track your order status in the Orders page"
-      });
+      
+      const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
+
+      if (!res){
+        alert('Razropay failed to load!!');
+        setIsPlacingOrder(false);
+        return 
+      }
+
+      const data = await fetch('/api/functions/v1/razorpay-payment-handler', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: "5000",
+          currency: "INR",
+          receipt: "fffff",
+          payment_capture: 1,
+        }),
+      }).then((t) => t.json());
+
+     const {id} = data;
+
+    const options = {
+      "key": "rzp_test_s5u7dIraqdLSFW", // Enter the Key ID generated from the Dashboard
+      "amount": "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+      "currency": "INR",
+      "name": "BiteNearBy",
+      "description": "Test Transaction",
+      "image": "https://res.cloudinary.com/dtoms8pva/image/upload/v1747807087/Screenshot_2025-05-21_112626_iql7r6.png",
+      "order_id": id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
+      "notes": {
+          "address": "Razorpay Corporate Office"
+      },
+      "theme": {
+          "color": "#3399cc"
+      },
+      handler: async function (response: any) {
+        console.log(response);
+        // Verify payment on your backend
+        const verifyRes = await fetch('/razorpay-payment-verification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        console.log(verifyData);
+        if (verifyData.success) {
+          // Place the order after successful payment verification
+          // await useOrder().placeOrder(address, phone);
+          await placeOrder(address, phone);
+            setShowCheckoutDialog(false);
+            navigate('/customer/orders');
+            toast({
+              title: "Order placed successfully!",
+              description: "You can track your order status in the Orders page"
+            });
+          setShowCheckoutDialog(false);
+          navigate('/customer/orders');
+        } else {
+          alert('Payment verification failed. Please contact support.');
+        }
+      }
+  };
+  const paymentObject = new window.Razorpay(options); 
+  paymentObject.open();
+      
+     
     } catch (error) {
       console.error("Error placing order:", error);
       toast({

@@ -8,6 +8,18 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      "/api": {
+        target: "https://msfzehtlunkptuegwukh.supabase.co",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+      "/razorpay-payment-verification": {
+        target: "https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/razorpay-payment-verification/, ""),
+      },
+    },
   },
   plugins: [
     react(),
