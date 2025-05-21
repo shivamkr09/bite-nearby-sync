@@ -26,22 +26,23 @@ export function useVendorRestaurants(userId: string | undefined) {
         name: restaurant.name,
         description: restaurant.description || null,
         address: restaurant.address || null,
-        city: restaurant.city || null,
-        state: restaurant.state || null,
-        zip_code: restaurant.zip_code || null,
-        phone_number: restaurant.phone_number || null,
-        website: restaurant.website || null,
-        owner_id: restaurant.owner_id,
-        image_url: restaurant.image_url || null,
-        cuisine_type: restaurant.cuisine_type || null,
-        rating: restaurant.rating || null,
-        number_of_ratings: restaurant.number_of_ratings || null,
-        is_open: restaurant.is_open !== null ? restaurant.is_open : false,
-        opening_time: restaurant.opening_time || null,
-        closing_time: restaurant.closing_time || null,
         latitude: restaurant.latitude,
         longitude: restaurant.longitude,
-        updated_at: restaurant.updated_at
+        owner_id: restaurant.owner_id,
+        image_url: restaurant.image_url || null,
+        rating: restaurant.rating || null,
+        is_open: restaurant.is_open !== null ? restaurant.is_open : false,
+        updated_at: restaurant.updated_at,
+        // These fields might not exist in the actual database but are in the TypeScript type
+        city: null,
+        state: null,
+        zip_code: null,
+        phone_number: null,
+        website: null,
+        cuisine_type: null,
+        number_of_ratings: null,
+        opening_time: null,
+        closing_time: null
       }));
       
       setVendorRestaurants(completeRestaurants);
@@ -59,27 +60,19 @@ export function useVendorRestaurants(userId: string | undefined) {
     if (!userId) return;
     
     try {
+      // Only include fields that exist in the database table
       const { error } = await supabase
         .from('restaurants')
         .insert({
           name: data.name || '',
           description: data.description || null,
-          address: data.address || null,
-          city: data.city || null,
-          state: data.state || null,
-          zip_code: data.zip_code || null,
-          phone_number: data.phone_number || null,
-          website: data.website || null,
+          address: data.address || '',
           owner_id: userId,
           latitude: data.latitude || 0,
           longitude: data.longitude || 0,
           image_url: data.image_url || null,
-          cuisine_type: data.cuisine_type || null,
           is_open: true,
-          number_of_ratings: 0,
-          rating: 0,
-          opening_time: data.opening_time || null,
-          closing_time: data.closing_time || null
+          rating: 0
         });
         
       if (error) throw error;
@@ -98,12 +91,24 @@ export function useVendorRestaurants(userId: string | undefined) {
 
   const updateRestaurant = useCallback(async (id: string, data: Partial<RestaurantType>) => {
     try {
+      // Only include fields that exist in the database
+      const updateData: any = {
+        updated_at: new Date().toISOString()
+      };
+
+      // Only add fields that actually exist in the database
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.image_url !== undefined) updateData.image_url = data.image_url;
+      if (data.latitude !== undefined) updateData.latitude = data.latitude;
+      if (data.longitude !== undefined) updateData.longitude = data.longitude;
+      if (data.is_open !== undefined) updateData.is_open = data.is_open;
+      if (data.rating !== undefined) updateData.rating = data.rating;
+
       const { error } = await supabase
         .from('restaurants')
-        .update({
-          ...data,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', id);
         
       if (error) throw error;
