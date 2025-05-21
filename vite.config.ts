@@ -14,6 +14,11 @@ export default defineConfig(({ mode }) => ({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
+      "/razorpay-payment-verification": {
+        target: "https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/razorpay-payment-verification/, ""),
+      },
     },
   },
   plugins: [

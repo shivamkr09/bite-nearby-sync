@@ -83,22 +83,46 @@ const CartPage = () => {
         }),
       }).then((t) => t.json());
 
-      console.log(data)
+     const {id} = data;
 
     const options = {
       "key": "rzp_test_s5u7dIraqdLSFW", // Enter the Key ID generated from the Dashboard
       "amount": "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
       "currency": "INR",
-      "name": "Acme Corp",
+      "name": "BiteNearBy",
       "description": "Test Transaction",
-      "image": "https://example.com/your_logo",
-      "order_id": "order_IluGWxBm9U8zJ8", //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-      "callback_url":"http://localhost:1769/verify",
+      "image": "https://res.cloudinary.com/dtoms8pva/image/upload/v1747807087/Screenshot_2025-05-21_112626_iql7r6.png",
+      "order_id": id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
       "notes": {
           "address": "Razorpay Corporate Office"
       },
       "theme": {
           "color": "#3399cc"
+      },
+      handler: async function (response: any) {
+        console.log(response);
+        // Verify payment on your backend
+        const verifyRes = await fetch('/razorpay-payment-verification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+          }),
+        });
+        const verifyData = await verifyRes.json();
+        console.log(verifyData);
+        if (verifyData.success) {
+          // Place the order after successful payment verification
+          // await useOrder().placeOrder(address, phone);
+          setShowCheckoutDialog(false);
+          navigate('/customer/orders');
+        } else {
+          alert('Payment verification failed. Please contact support.');
+        }
       }
   };
   const paymentObject = new window.Razorpay(options); 
