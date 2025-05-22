@@ -118,6 +118,7 @@ const CartPage = () => {
           payment_capture: 1,
         }),
       }).then((t) => t.json());
+      setShowCheckoutDialog(false);
 
      const {id} = data;
 
@@ -127,7 +128,7 @@ const CartPage = () => {
       "currency": "INR",
       "name": "BiteNearBy",
       "description": "Test Transaction",
-      "image": "https://res.cloudinary.com/dtoms8pva/image/upload/v1747807087/Screenshot_2025-05-21_112626_iql7r6.png",
+      "image": "https://res.cloudinary.com/dtzsujhps/image/upload/t_Logo/v1747841549/ChatGPT_Image_May_21_2025_08_51_00_PM_lrukyz.png",
       "order_id": id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
       "notes": {
           "address": "Razorpay Corporate Office"
@@ -159,13 +160,13 @@ const CartPage = () => {
           // Place the order after successful payment verification
           // await useOrder().placeOrder(address, phone);
           await placeOrder(address, phone);
-            setShowCheckoutDialog(false);
+            
             navigate('/customer/orders');
             toast({
               title: "Order placed successfully!",
               description: "You can track your order status in the Orders page"
             });
-          setShowCheckoutDialog(false);
+          // setShowCheckoutDialog(false);
           navigate('/customer/orders');
         } else {
           alert('Payment verification failed. Please contact support.');
