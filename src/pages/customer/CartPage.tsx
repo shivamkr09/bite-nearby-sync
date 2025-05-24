@@ -270,7 +270,7 @@ const CartPage = () => {
                 </div>
                 
                 {availabilityResponse ? (
-                  <div className={`p-4 rounded-md ${availabilityResponse.isAvailable ? 'bg-success-50 border border-success-200' : 'bg-destructive/10'}`}>
+                  <div className={`p-4 rounded-md ${availabilityResponse.isAvailable ? ' border border-success-200' : 'bg-destructive/10'}`}>
                     <h4 className="font-medium mb-1">
                       {availabilityResponse.isAvailable 
                         ? 'All items are available!' 

@@ -29,7 +29,7 @@ const VendorOrders = () => {
       <h1 className="text-2xl font-bold mb-6">Orders Management</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-        <TabsList>
+        <TabsList className="flex-wrap mb-4">
           <TabsTrigger value="all">All Orders</TabsTrigger>
           <TabsTrigger value="new">New</TabsTrigger>
           <TabsTrigger value="cooking">Cooking</TabsTrigger>

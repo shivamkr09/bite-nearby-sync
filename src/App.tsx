@@ -28,16 +28,19 @@ import RestaurantsPage from "@/pages/customer/RestaurantsPage";
 import RestaurantDetailPage from "@/pages/customer/RestaurantDetailPage";
 import CartPage from "@/pages/customer/CartPage";
 import OrdersPage from "@/pages/customer/OrdersPage";
+import ProfilePage from "@/pages/customer/ProfilePage";
 
 // Vendor Pages
 import VendorDashboard from "@/pages/vendor/VendorDashboard";
 import VendorOrders from "@/pages/vendor/VendorOrders";
 import VendorRestaurants from "@/pages/vendor/VendorRestaurants";
 import VendorMenuPage from "@/pages/vendor/VendorMenuPage";
+import VendorAvailabilityRequestsPage from "@/pages/vendor/VendorAvailabilityRequestsPage";
 
 // Admin Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import VendorApprovals from "@/pages/admin/VendorApprovals";
+
 import TermsAndConditions from "@/pages/admin/TermsAndConditions";
 
 const queryClient = new QueryClient();
@@ -65,6 +68,7 @@ const App = () => (
                       <Route path="restaurants/:id" element={<RestaurantDetailPage />} />
                       <Route path="cart" element={<CartPage />} />
                       <Route path="orders" element={<OrdersPage />} />
+                      <Route path="profile" element={<ProfilePage />} />
                     </Route>
                     
                     {/* Vendor Routes */}
@@ -73,6 +77,7 @@ const App = () => (
                       <Route path="orders" element={<VendorOrders />} />
                       <Route path="restaurants" element={<VendorRestaurants />} />
                       <Route path="menu" element={<VendorMenuPage />} />
+                      <Route path="availability-requests" element={<VendorAvailabilityRequestsPage />} />
                     </Route>
                     
                     {/* Admin Routes */}

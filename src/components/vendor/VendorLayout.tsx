@@ -26,6 +26,7 @@ const VendorLayout = () => {
     { label: "Orders", path: "/vendor/orders" },
     { label: "Restaurants", path: "/vendor/restaurants" },
     { label: "Menu Management", path: "/vendor/menu" },
+    { label: "Availability Requests", path: "/vendor/availability-requests" },
   ];
 
   const closeMenu = () => setIsMenuOpen(false);
