@@ -13,7 +13,7 @@ interface MenuItemCardProps {
 }
 
 const MenuItemCard = ({ menuItem, onEdit, onDelete, onToggleAvailability }: MenuItemCardProps) => {
-  const { id, name, description, price, category, is_available } = menuItem;
+  const { id, name, description, price, original_price, category, is_available } = menuItem;
 
   return (
     <Card className={`overflow-hidden ${!is_available ? 'opacity-60' : ''}`}>
@@ -22,7 +22,14 @@ const MenuItemCard = ({ menuItem, onEdit, onDelete, onToggleAvailability }: Menu
           <div className="flex-1">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-medium text-base">{name}</h3>
-              <p className="font-semibold text-primary">${Number(price).toFixed(2)}</p>
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">
+                  Your price: ₹{Number(original_price || price).toFixed(2)}
+                </div>
+                <div className="font-semibold text-primary">
+                  Customer pays: ₹{Number(price).toFixed(2)}
+                </div>
+              </div>
             </div>
             <p className="text-muted-foreground text-sm mb-1 line-clamp-2">{description}</p>
             <div className="flex items-center justify-between mt-3">

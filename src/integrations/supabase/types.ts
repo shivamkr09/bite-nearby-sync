@@ -91,37 +91,46 @@ export type Database = {
       }
       menu_items: {
         Row: {
+          admin_fee: number | null
           category: string
           created_at: string
           description: string | null
           id: string
           image_url: string | null
           is_available: boolean | null
+          markup_percentage: number | null
           name: string
+          original_price: number | null
           price: number
           restaurant_id: string
           updated_at: string
         }
         Insert: {
+          admin_fee?: number | null
           category: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          markup_percentage?: number | null
           name: string
+          original_price?: number | null
           price: number
           restaurant_id: string
           updated_at?: string
         }
         Update: {
+          admin_fee?: number | null
           category?: string
           created_at?: string
           description?: string | null
           id?: string
           image_url?: string | null
           is_available?: boolean | null
+          markup_percentage?: number | null
           name?: string
+          original_price?: number | null
           price?: number
           restaurant_id?: string
           updated_at?: string
@@ -237,6 +246,45 @@ export type Database = {
           },
         ]
       }
+      payment_routes: {
+        Row: {
+          admin_fee: number
+          created_at: string
+          id: string
+          order_id: string
+          razorpay_fee: number
+          razorpay_route_id: string | null
+          status: string | null
+          total_amount: number
+          updated_at: string
+          vendor_amount: number
+        }
+        Insert: {
+          admin_fee: number
+          created_at?: string
+          id?: string
+          order_id: string
+          razorpay_fee: number
+          razorpay_route_id?: string | null
+          status?: string | null
+          total_amount: number
+          updated_at?: string
+          vendor_amount: number
+        }
+        Update: {
+          admin_fee?: number
+          created_at?: string
+          id?: string
+          order_id?: string
+          razorpay_fee?: number
+          razorpay_route_id?: string | null
+          status?: string | null
+          total_amount?: number
+          updated_at?: string
+          vendor_amount?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -317,7 +365,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_marked_up_price: {
+        Args: {
+          original_price: number
+          markup_percentage?: number
+          admin_fee?: number
+        }
+        Returns: number
+      }
     }
     Enums: {
       availability_request_status: "pending" | "responded" | "rejected"

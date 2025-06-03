@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 
-
 declare global {
   interface Window {
     Razorpay: any;
@@ -37,12 +36,16 @@ const CartPage = () => {
   const [phone, setPhone] = useState("");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
-  // Ensure prices are properly calculated
-  const total = cart.reduce((sum, item) => {
+  // Calculate totals with marked up prices
+  const subtotal = cart.reduce((sum, item) => {
     const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
     return sum + (itemPrice * item.quantity);
   }, 0);
-  function loadScript(src:any) {
+  
+  const deliveryFee = 2.99;
+  const total = subtotal + deliveryFee;
+  
+  function loadScript(src: any) {
     return new Promise((resolve) => {
       const script = document.createElement('script')
       script.src = src
@@ -93,18 +96,21 @@ const CartPage = () => {
     
     setIsPlacingOrder(true);
     try {
-      
       const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js')
 
-      if (!res){
-        alert('Razropay failed to load!!');
+      if (!res) {
+        alert('Razorpay failed to load!!');
         setIsPlacingOrder(false);
         return 
       }
-      let isProd=import.meta.env.VITE_ENV === 'production';
+      
+      let isProd = import.meta.env.VITE_ENV === 'production';
       const prodUrl = 'https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-handler';
       const devUrl = '/api/functions/v1/razorpay-payment-handler';
       const actualUrl = isProd ? prodUrl : devUrl;
+
+      // Convert total to paise (multiply by 100)
+      const amountInPaise = Math.round(total * 100);
 
       const data = await fetch(`${actualUrl}`, {
         method: 'POST',
@@ -112,71 +118,74 @@ const CartPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: "5000",
+          amount: amountInPaise,
           currency: "INR",
-          receipt: "fffff",
+          receipt: `order_${Date.now()}`,
           payment_capture: 1,
         }),
       }).then((t) => t.json());
+      
       setShowCheckoutDialog(false);
 
-     const {id} = data;
+      const { id } = data;
 
-    const options = {
-      "key": "rzp_test_s5u7dIraqdLSFW", // Enter the Key ID generated from the Dashboard
-      "amount": "50000", // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
-      "currency": "INR",
-      "name": "BiteNearBy",
-      "description": "Test Transaction",
-      "image": "https://res.cloudinary.com/dtzsujhps/image/upload/t_Logo/v1747841549/ChatGPT_Image_May_21_2025_08_51_00_PM_lrukyz.png",
-      "order_id": id, //This is a sample Order ID. Pass the `id` obtained in the response of Step 1
-      "notes": {
-          "address": "Razorpay Corporate Office"
-      },
-      "theme": {
+      const options = {
+        "key": "rzp_test_s5u7dIraqdLSFW",
+        "amount": amountInPaise,
+        "currency": "INR",
+        "name": "BiteNearBy",
+        "description": "Food Order Payment",
+        "image": "https://res.cloudinary.com/dtzsujhps/image/upload/t_Logo/v1747841549/ChatGPT_Image_May_21_2025_08_51_00_PM_lrukyz.png",
+        "order_id": id,
+        "notes": {
+          "address": address,
+          "phone": phone
+        },
+        "theme": {
           "color": "#3399cc"
-      },
-      handler: async function (response: any) {
-        console.log(response);
-         let isProd=import.meta.env.VITE_ENV === 'production';
-      const prodUrl = 'https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification';
-      const devUrl = '/razorpay-payment-verification';
-      const actualUrl = isProd ? prodUrl : devUrl;
-        // Verify payment on your backend
-        const verifyRes = await fetch(`${actualUrl}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_order_id: response.razorpay_order_id,
-            razorpay_signature: response.razorpay_signature,
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        console.log(verifyData);
-        if (verifyData.success) {
-          // Place the order after successful payment verification
-          // await useOrder().placeOrder(address, phone);
-          await placeOrder(address, phone);
+        },
+        handler: async function (response: any) {
+          console.log(response);
+          let isProd = import.meta.env.VITE_ENV === 'production';
+          const prodUrl = 'https://msfzehtlunkptuegwukh.supabase.co/functions/v1/razorpay-payment-verification';
+          const devUrl = '/razorpay-payment-verification';
+          const actualUrl = isProd ? prodUrl : devUrl;
+          
+          // Verify payment on backend
+          const verifyRes = await fetch(`${actualUrl}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+          
+          const verifyData = await verifyRes.json();
+          console.log(verifyData);
+          
+          if (verifyData.success) {
+            // Place the order after successful payment verification
+            await placeOrder(address, phone);
+            
+            toast({
+              title: "Payment successful!",
+              description: `Order placed. Vendor gets ₹${verifyData.splits.vendor_amount}, Admin fee: ₹${verifyData.splits.admin_fee}`
+            });
             
             navigate('/customer/orders');
-            toast({
-              title: "Order placed successfully!",
-              description: "You can track your order status in the Orders page"
-            });
-          // setShowCheckoutDialog(false);
-          navigate('/customer/orders');
-        } else {
-          alert('Payment verification failed. Please contact support.');
+          } else {
+            alert('Payment verification failed. Please contact support.');
+          }
         }
-      }
-  };
-  const paymentObject = new window.Razorpay(options); 
-  paymentObject.open();
+      };
       
-     
+      const paymentObject = new window.Razorpay(options); 
+      paymentObject.open();
+      
     } catch (error) {
       console.error("Error placing order:", error);
       toast({
@@ -245,8 +254,11 @@ const CartPage = () => {
                   Clear Cart
                 </Button>
                 <div className="text-right">
-                  <div className="text-sm text-muted-foreground">Total</div>
-                  <div className="text-lg font-semibold">${total.toFixed(2)}</div>
+                  <div className="text-sm text-muted-foreground">Subtotal</div>
+                  <div className="text-lg font-semibold">₹{subtotal.toFixed(2)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    (Includes platform fees)
+                  </div>
                 </div>
               </CardFooter>
             </Card>
@@ -334,22 +346,25 @@ const CartPage = () => {
                 id="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (555) 123-4567"
+                placeholder="+91 9876543210"
               />
             </div>
             
             <div className="border-t pt-4">
               <div className="flex justify-between mb-2">
                 <span>Subtotal</span>
-                <span>${total.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span>Delivery Fee</span>
-                <span>$2.99</span>
+                <span>₹{deliveryFee}</span>
               </div>
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>${(total + 2.99).toFixed(2)}</span>
+                <span>₹{total.toFixed(2)}</span>
+              </div>
+              <div className="text-xs text-muted-foreground mt-2">
+                Platform fees included in item prices
               </div>
             </div>
           </div>
@@ -365,7 +380,7 @@ const CartPage = () => {
               onClick={handlePlaceOrder}
               disabled={isPlacingOrder || !address || !phone}
             >
-              {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+              {isPlacingOrder ? 'Processing...' : `Pay ₹${total.toFixed(2)}`}
             </Button>
           </DialogFooter>
         </DialogContent>

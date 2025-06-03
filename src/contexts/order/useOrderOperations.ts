@@ -202,7 +202,7 @@ export const useOrderOperations = (
       
       if (restaurantError) throw restaurantError;
       
-      // Calculate correct total from cart items
+      // Calculate correct total from cart items (using marked up prices)
       const calculatedTotal = cart.reduce((sum, item) => {
         const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
         return sum + (itemPrice * item.quantity);
@@ -227,13 +227,13 @@ export const useOrderOperations = (
       
       if (orderError) throw orderError;
       
-      // Insert the order items
+      // Insert the order items with marked up prices
       const orderItemsToInsert = cart.map(item => ({
         order_id: orderData.id,
         menu_item_id: item.id,
         name: item.menuItem.name,
         description: item.menuItem.description,
-        price: item.price,
+        price: item.price, // This is the marked up price customer pays
         quantity: item.quantity
       }));
       
@@ -242,6 +242,26 @@ export const useOrderOperations = (
         .insert(orderItemsToInsert);
       
       if (itemsError) throw itemsError;
+      
+      // Create payment route record for tracking splits
+      const adminFee = cart.length * 3; // ₹3 per item to admin
+      const razorpayFee = calculatedTotal * 0.02; // 2% to Razorpay
+      const vendorAmount = calculatedTotal - adminFee; // Vendor gets total minus admin fee
+      
+      const { error: paymentRouteError } = await supabase
+        .from('payment_routes')
+        .insert({
+          order_id: orderData.id,
+          total_amount: calculatedTotal,
+          vendor_amount: vendorAmount,
+          admin_fee: adminFee,
+          razorpay_fee: razorpayFee,
+          status: 'pending'
+        });
+      
+      if (paymentRouteError) {
+        console.error('Error creating payment route:', paymentRouteError);
+      }
       
       toast({
         title: "Order placed",

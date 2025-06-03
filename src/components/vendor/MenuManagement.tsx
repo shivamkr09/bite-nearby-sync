@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +65,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
   };
 
   const handleDownloadTemplate = () => {
-    const templateHeaders = "name,description,price,category,is_available,image_url";
+    const templateHeaders = "name,description,original_price,category,is_available,image_url";
     const templateData = "Burger,Delicious beef burger,10.99,Main,true,\nFries,Crispy fries,4.99,Sides,true,";
     const csvContent = `${templateHeaders}\n${templateData}`;
     
@@ -94,7 +93,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
         
         const nameIndex = headers.indexOf('name');
         const descriptionIndex = headers.indexOf('description');
-        const priceIndex = headers.indexOf('price');
+        const priceIndex = headers.indexOf('original_price');
         const categoryIndex = headers.indexOf('category');
         const isAvailableIndex = headers.indexOf('is_available');
         const imageUrlIndex = headers.indexOf('image_url');
@@ -103,7 +102,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
           toast({
             variant: "destructive",
             title: "Invalid CSV format",
-            description: "CSV must include name, price, and category columns"
+            description: "CSV must include name, original_price, and category columns"
           });
           setIsUploading(false);
           return;
@@ -118,15 +117,15 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
           
           // Ensure all required fields are provided and properly typed
           const name = columns[nameIndex].trim();
-          const price = parseFloat(columns[priceIndex]);
+          const originalPrice = parseFloat(columns[priceIndex]);
           const category = columns[categoryIndex].trim();
           
-          if (isNaN(price) || !name || !category) continue;
+          if (isNaN(originalPrice) || !name || !category) continue;
           
           const menuItem = {
             restaurant_id: restaurantId,
             name: name,
-            price: price,
+            original_price: originalPrice,
             category: category,
             description: descriptionIndex !== -1 ? columns[descriptionIndex].trim() : null,
             is_available: isAvailableIndex !== -1 ? columns[isAvailableIndex].toLowerCase() === 'true' : true,
@@ -184,7 +183,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
           .update({
             name: menuItem.name,
             description: menuItem.description,
-            price: menuItem.price,
+            original_price: menuItem.original_price,
             category: menuItem.category,
             is_available: menuItem.is_available,
             image_url: menuItem.image_url,
@@ -200,7 +199,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
         });
       } else {
         // Create new item
-        if (!menuItem.name || !menuItem.price || !menuItem.category) {
+        if (!menuItem.name || !menuItem.original_price || !menuItem.category) {
           toast({
             variant: "destructive",
             title: "Missing fields",
@@ -213,7 +212,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
         const newMenuItem = {
           restaurant_id: restaurantId,
           name: menuItem.name,
-          price: menuItem.price,
+          original_price: menuItem.original_price,
           category: menuItem.category,
           description: menuItem.description || "",
           is_available: menuItem.is_available !== undefined ? menuItem.is_available : true,
@@ -335,7 +334,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-sm">
-                    Download our template CSV file, fill it with your menu items, and upload it back to update your menu.
+                    Download our template CSV file, fill it with your menu items using your base prices, and upload it back to update your menu. Platform fees will be automatically added.
                   </p>
                   <Button onClick={handleDownloadTemplate} variant="outline" className="w-full">
                     Download Template
@@ -384,7 +383,7 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm">
-                  Manually add, edit, or remove menu items. Toggle availability to temporarily hide items.
+                  Manually add, edit, or remove menu items. Enter your base price - platform fees (2% + ₹3) will be automatically added for customers.
                 </p>
               </CardContent>
               <CardFooter>
