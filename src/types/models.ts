@@ -54,6 +54,9 @@ export interface MenuItemType {
   name: string;
   description: string | null;
   price: number;
+  original_price?: number | null;
+  markup_percentage?: number | null;
+  admin_fee?: number | null;
   category: string;
   is_available: boolean;
   image_url: string | null;

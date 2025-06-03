@@ -208,11 +208,20 @@ const MenuManagement = ({ restaurantId }: MenuManagementProps) => {
           return;
         }
         
+        // Calculate the marked up price
+        const originalPrice = menuItem.original_price;
+        const markupPercentage = 2.0;
+        const adminFee = 3.0;
+        const markedUpPrice = Math.round((originalPrice * (1 + markupPercentage / 100) + adminFee) * 100) / 100;
+        
         // Ensure we have all required fields
         const newMenuItem = {
           restaurant_id: restaurantId,
           name: menuItem.name,
-          original_price: menuItem.original_price,
+          original_price: originalPrice,
+          price: markedUpPrice,
+          markup_percentage: markupPercentage,
+          admin_fee: adminFee,
           category: menuItem.category,
           description: menuItem.description || "",
           is_available: menuItem.is_available !== undefined ? menuItem.is_available : true,
