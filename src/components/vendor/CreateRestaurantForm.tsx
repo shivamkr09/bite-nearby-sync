@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+import { MapPin } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Restaurant name is required"),
@@ -37,6 +38,7 @@ interface CreateRestaurantFormProps {
 
 const CreateRestaurantForm = ({ onSuccess }: CreateRestaurantFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const { toast } = useToast();
   const { createRestaurant } = useRestaurant();
   
@@ -51,6 +53,41 @@ const CreateRestaurantForm = ({ onSuccess }: CreateRestaurantFormProps) => {
       imageUrl: "",
     },
   });
+
+  const getCurrentLocation = async () => {
+    setIsGettingLocation(true);
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported by your browser');
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      form.setValue('latitude', latitude.toString());
+      form.setValue('longitude', longitude.toString());
+
+      toast({
+        title: "Location detected",
+        description: "Coordinates have been filled automatically."
+      });
+    } catch (error: any) {
+      console.error('Error getting location:', error);
+      toast({
+        variant: "destructive",
+        title: "Location error",
+        description: error.message || "Failed to get current location"
+      });
+    } finally {
+      setIsGettingLocation(false);
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
@@ -131,34 +168,51 @@ const CreateRestaurantForm = ({ onSuccess }: CreateRestaurantFormProps) => {
           )}
         />
         
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="latitude"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Latitude</FormLabel>
-                <FormControl>
-                  <Input placeholder="E.g., 51.5074" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Location</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={getCurrentLocation}
+              disabled={isGettingLocation}
+              className="flex items-center gap-2"
+            >
+              <MapPin className="h-4 w-4" />
+              {isGettingLocation ? "Getting location..." : "Get Current Location"}
+            </Button>
+          </div>
           
-          <FormField
-            control={form.control}
-            name="longitude"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Longitude</FormLabel>
-                <FormControl>
-                  <Input placeholder="E.g., -0.1278" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="latitude"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Latitude</FormLabel>
+                  <FormControl>
+                    <Input placeholder="E.g., 51.5074" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="longitude"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Longitude</FormLabel>
+                  <FormControl>
+                    <Input placeholder="E.g., -0.1278" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
         
         <FormField

@@ -28,6 +28,7 @@ const CustomerLayout = () => {
   const navItems = [
     { label: "Restaurants", path: "/customer/restaurants" },
     { label: "My Orders", path: "/customer/orders" },
+    { label: "Profile", path: "/customer/profile" },
   ];
 
   const closeMenu = () => setIsMenuOpen(false);
