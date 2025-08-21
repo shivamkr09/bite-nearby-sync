@@ -106,9 +106,14 @@ const Home = () => {
       
       <footer className="bg-muted py-6">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="font-semibold text-lg text-primary mb-4 md:mb-0">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+            <div className="font-semibold text-lg text-primary mb-2 md:mb-0">
               Bite<span className="text-foreground">Nearby</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm">
+              <Link to="/legal" className="text-muted-foreground hover:underline">Legal & Compliance</Link>
+              <Link to="/fssai-guide" className="text-muted-foreground hover:underline">FSSAI Registration Guide</Link>
+              <Link to="/report-issue" className="text-muted-foreground hover:underline">Report Issue</Link>
             </div>
             <div className="text-sm text-muted-foreground">
               &copy; {new Date().getFullYear()} BiteNearby. All rights reserved.

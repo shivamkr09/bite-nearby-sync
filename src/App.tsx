@@ -42,6 +42,9 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import VendorApprovals from "@/pages/admin/VendorApprovals";
 
 import TermsAndConditions from "@/pages/admin/TermsAndConditions";
+import Legal from "@/pages/Legal";
+import ReportIssue from "@/pages/ReportIssue";
+import FssaiGuide from "@/pages/FssaiGuide";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +62,9 @@ const App = () => (
                   <Routes>
                     {/* Public Routes */}
                     <Route path="/" element={<Home />} />
+                    <Route path="/legal" element={<Legal />} />
+                    <Route path="/fssai-guide" element={<FssaiGuide />} />
+                    <Route path="/report-issue" element={<ReportIssue />} />
                     <Route path="/signin" element={<SignIn />} />
                     <Route path="/signup" element={<SignUp />} />
                     
