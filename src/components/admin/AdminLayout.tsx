@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import AnimatedOutlet from "@/components/common/AnimatedOutlet";
 
 const AdminLayout = () => {
   const { user, signOut, userType } = useAuth();
@@ -45,7 +46,7 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b">
+  <header className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="font-semibold text-xl text-primary">
@@ -144,7 +145,7 @@ const AdminLayout = () => {
 
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 pb-20">
-        <Outlet />
+        <AnimatedOutlet />
       </main>
     </div>
   );

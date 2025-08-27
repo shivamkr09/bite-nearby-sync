@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Search } from "lucide-react";
 import RestaurantCard from "@/components/customer/RestaurantCard";
 import { useLocation } from "@/contexts/LocationContext";
+import { motion } from "framer-motion";
+import { staggerContainer } from "@/lib/motion";
 import { useRestaurant } from "@/contexts/RestaurantContext";
 
 const RestaurantsPage = () => {
@@ -131,18 +133,28 @@ const RestaurantsPage = () => {
           </div>
         </div>
       ) : isAnyRestaurant ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          variants={staggerContainer(0.06)}
+          initial="initial"
+          animate="animate"
+        >
           {filteredRestaurants.map((restaurant) => (
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
-        </div>
+        </motion.div>
       ) : (
-        <div className="text-center py-8">
+        <motion.div
+          className="text-center py-8"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <p className="text-xl font-medium">No restaurants found</p>
           <p className="text-sm text-muted-foreground mt-2">
             Try a different search term or location
           </p>
-        </div>
+        </motion.div>
       )}
     </div>
   );

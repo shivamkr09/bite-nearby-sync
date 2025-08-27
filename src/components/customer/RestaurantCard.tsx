@@ -3,12 +3,19 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { RestaurantType } from "@/types/models";
 import { MapPin } from "lucide-react";
+import { motion } from "framer-motion";
 
 const RestaurantCard = ({ restaurant }: { restaurant: RestaurantType }) => {
   const { id, name, address, description, image_url, distance, is_open, rating } = restaurant;
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.35 }}
+    >
+    <Card className="overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5">
       <Link to={`/customer/restaurants/${id}`}>
         <div className="relative h-40 w-full bg-secondary">
           {image_url && (
@@ -48,6 +55,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: RestaurantType }) => {
         </CardFooter>
       </Link>
     </Card>
+    </motion.div>
   );
 };
 

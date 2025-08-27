@@ -15,6 +15,7 @@ import { useState } from "react";
 import ThemeToggle from "../common/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileBottomNav from "./MobileBottomNav";
+import AnimatedOutlet from "@/components/common/AnimatedOutlet";
 
 const CustomerLayout = () => {
   const { user, signOut } = useAuth();
@@ -36,7 +37,7 @@ const CustomerLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b">
+  <header className="sticky top-0 z-10 bg-background/80 backdrop-blur border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center">
             <Link to="/" className="font-semibold text-xl text-primary">
@@ -144,7 +145,7 @@ const CustomerLayout = () => {
 
       {/* Main content - add padding at bottom for mobile navigation */}
       <main className="flex-1 container mx-auto px-4 pb-20 md:pb-8">
-        <Outlet />
+        <AnimatedOutlet />
       </main>
       
       {/* Mobile Bottom Navigation */}
