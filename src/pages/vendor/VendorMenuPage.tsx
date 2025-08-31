@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { motion } from "framer-motion";
 
 const VendorMenuPage = () => {
   const { vendorRestaurants, fetchVendorRestaurants } = useRestaurant();
@@ -32,7 +33,7 @@ const VendorMenuPage = () => {
       
       {vendorRestaurants.length > 0 ? (
         <>
-          <div className="mb-6">
+          <motion.div className="mb-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
             <label className="block text-sm font-medium mb-1">
               Select Restaurant
             </label>
@@ -51,16 +52,20 @@ const VendorMenuPage = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </motion.div>
           
-          {selectedRestaurantId && <MenuManagement restaurantId={selectedRestaurantId} />}
+          {selectedRestaurantId && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+              <MenuManagement restaurantId={selectedRestaurantId} />
+            </motion.div>
+          )}
         </>
       ) : (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">No Restaurants Found</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="motion-safe:animate-in motion-safe:fade-in-50 motion-safe:slide-in-from-bottom-1">
             <p>
               You need to create a restaurant before managing menus. Go to the Restaurants section to add your first restaurant.
             </p>

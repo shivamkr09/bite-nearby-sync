@@ -6,6 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import AvailabilityRequestCard from "@/components/vendor/AvailabilityRequestCard";
 import OrderManagementCard from "@/components/vendor/OrderManagementCard";
 import { useRestaurant } from "@/contexts/RestaurantContext";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -130,7 +131,8 @@ const VendorDashboard = () => {
         </Card>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <Card>
           <CardHeader className="bg-muted/30 pb-2">
             <CardTitle className="text-lg">Restaurants</CardTitle>
@@ -142,6 +144,8 @@ const VendorDashboard = () => {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}>
         <Card>
           <CardHeader className="bg-muted/30 pb-2">
             <CardTitle className="text-lg">Total Orders</CardTitle>
@@ -153,6 +157,8 @@ const VendorDashboard = () => {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }}>
         <Card>
           <CardHeader className="bg-muted/30 pb-2">
             <CardTitle className="text-lg">Total Revenue</CardTitle>
@@ -164,6 +170,8 @@ const VendorDashboard = () => {
             </p>
           </CardContent>
         </Card>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.15 }}>
         <Card>
           <CardHeader className="bg-muted/30 pb-2">
             <CardTitle className="text-lg">Availability Requests</CardTitle>
@@ -182,7 +190,8 @@ const VendorDashboard = () => {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Analytics Section */}
       <div className="space-y-6">
@@ -214,6 +223,7 @@ const VendorDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}>
           <Card>
             <CardHeader>
               <CardTitle>Order Trends</CardTitle>
@@ -230,7 +240,9 @@ const VendorDashboard = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          </motion.div>
 
+          <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35, delay: 0.05 }}>
           <Card>
             <CardHeader>
               <CardTitle>Revenue Trends</CardTitle>
@@ -247,29 +259,30 @@ const VendorDashboard = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
+          </motion.div>
         </div>
       </div>
       
       {pendingRequests.length > 0 && (
-        <div className="space-y-4">
+        <motion.div className="space-y-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}>
           <h2 className="text-xl font-semibold">Pending Availability Requests</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pendingRequests.map((request) => (
               <AvailabilityRequestCard key={request.id} request={request} />
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
       
       {newOrders.length > 0 && (
-        <div className="space-y-4">
+        <motion.div className="space-y-4" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.35 }}>
           <h2 className="text-xl font-semibold">New Orders</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {newOrders.map((order) => (
               <OrderManagementCard key={order.id} order={order} />
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { VendorApprovalType } from "@/types/models";
+import { motion } from "framer-motion";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,9 +155,10 @@ const VendorApprovals = () => {
       {loading ? (
         <div className="text-center py-8">Loading...</div>
       ) : vendors.length > 0 ? (
-        <div className="space-y-6">
-          {vendors.map((vendor) => (
-            <Card key={vendor.id}>
+        <motion.div className="space-y-6" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+          {vendors.map((vendor, idx) => (
+            <motion.div key={vendor.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: idx * 0.04 }}>
+            <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">
@@ -236,9 +238,10 @@ const VendorApprovals = () => {
                   )}
                 </div>
               </CardContent>
-            </Card>
+      </Card>
+      </motion.div>
           ))}
-        </div>
+    </motion.div>
       ) : (
         <Card>
           <CardContent className="py-8">

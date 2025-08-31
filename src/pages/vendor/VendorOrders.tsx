@@ -4,6 +4,7 @@ import { useRestaurant } from "@/contexts/RestaurantContext";
 import OrderManagementCard from "@/components/vendor/OrderManagementCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderWithItems } from "@/types/models";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VendorOrders = () => {
@@ -53,21 +54,37 @@ const VendorOrders = () => {
           ))}
         </TabsList>
         
-        {["all", "new", "cooking", "ready", "dispatched", "delivered"].map((tab) => (
+  {["all", "new", "cooking", "ready", "dispatched", "delivered"].map((tab) => (
           <TabsContent key={tab} value={tab} className="mt-4">
             {getFilteredOrders(tab as string | "all").length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {getFilteredOrders(tab as string | "all").map((order: OrderWithItems) => (
-                  <OrderManagementCard key={order.id} order={order} />
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                initial="initial"
+                animate="animate"
+              >
+                {getFilteredOrders(tab as string | "all").map((order: OrderWithItems, idx) => (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: idx * 0.04 }}
+                  >
+                    <OrderManagementCard order={order} />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
-              <div className="text-center py-8 bg-muted/20 rounded-lg">
+              <motion.div
+                className="text-center py-8 bg-muted/20 rounded-lg"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 <p className="text-muted-foreground">No {tab === "all" ? "" : tab} orders found</p>
-              </div>
+              </motion.div>
             )}
           </TabsContent>
-        ))}
+  ))}
       </Tabs>
     </div>
   );

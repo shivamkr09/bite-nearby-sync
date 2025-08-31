@@ -5,6 +5,7 @@ import RestaurantManagementCard from "@/components/vendor/RestaurantManagementCa
 import { useRestaurant } from "@/contexts/RestaurantContext";
 import CreateRestaurantModal from "@/components/vendor/CreateRestaurantModal";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const VendorRestaurants = () => {
   const { vendorRestaurants, fetchVendorRestaurants } = useRestaurant();
@@ -21,17 +22,24 @@ const VendorRestaurants = () => {
       </div>
       
       {vendorRestaurants.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {vendorRestaurants.map((restaurant) => (
-            <RestaurantManagementCard key={restaurant.id} restaurant={restaurant} />
+        <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {vendorRestaurants.map((restaurant, idx) => (
+            <motion.div
+              key={restaurant.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: idx * 0.05 }}
+            >
+              <RestaurantManagementCard restaurant={restaurant} />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Get Started</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="motion-safe:animate-in motion-safe:fade-in-50 motion-safe:slide-in-from-bottom-1">
             <p className="mb-4">
               You don't have any restaurants yet. Create your first restaurant to start receiving orders.
             </p>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, PackageCheck, PackageOpen, ShoppingBag, Truck } from "lucide-react";
 import { OrderWithItems } from "@/types/models";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
 
 interface OrderStatusCardProps {
   order: OrderWithItems;
@@ -74,7 +75,8 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
 
   return (
     <>
-      <Card className="mb-4">
+  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+  <Card className="mb-4">
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">
@@ -116,6 +118,7 @@ const OrderStatusCard = ({ order }: OrderStatusCardProps) => {
           </Button>
         </CardFooter>
       </Card>
+  </motion.div>
       
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent>
