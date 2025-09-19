@@ -24,6 +24,7 @@ import PageLoader from "@/components/common/PageLoader";
 const Home = lazy(() => import("@/pages/Home"));
 const SignIn = lazy(() => import("@/pages/auth/SignIn"));
 const SignUp = lazy(() => import("@/pages/auth/SignUp"));
+const RestaurantLogin = lazy(() => import("@/pages/auth/RestaurantLogin"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Customer Pages
@@ -73,6 +74,7 @@ const App = () => (
                         <Route path="/report-issue" element={<ReportIssue />} />
                         <Route path="/signin" element={<SignIn />} />
                         <Route path="/signup" element={<SignUp />} />
+                        <Route path="/restaurant-login" element={<RestaurantLogin />} />
                         <Route path="*" element={<NotFound />} />
                       </Route>
 
