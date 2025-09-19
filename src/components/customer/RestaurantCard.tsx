@@ -185,7 +185,7 @@ const RestaurantCard = ({ restaurant }: { restaurant: RestaurantType }) => {
                 <span className="text-sm font-medium text-primary">
                   View Menu
                 </span>
-                {distance !== undefined && distance >= 50 && (
+                {distance !== undefined && (
                   <span className="text-xs text-muted-foreground">
                     • {distance.toFixed(1)} km away
                   </span>

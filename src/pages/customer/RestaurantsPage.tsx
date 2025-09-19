@@ -83,7 +83,11 @@ const RestaurantsPage = () => {
           return a.name.localeCompare(b.name);
         case "distance":
         default:
-          return (a.distance || 999) - (b.distance || 999);
+          // Handle undefined distances by placing them at the end
+          if (a.distance === undefined && b.distance === undefined) return 0;
+          if (a.distance === undefined) return 1;
+          if (b.distance === undefined) return -1;
+          return a.distance - b.distance;
       }
     });
 

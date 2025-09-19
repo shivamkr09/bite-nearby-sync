@@ -4,6 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { RestaurantType } from "@/types/models";
 
+// Haversine formula to calculate distance between two coordinates
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+}
+
 export function useNearbyRestaurants() {
   const [nearbyRestaurants, setNearbyRestaurants] = useState<RestaurantType[]>([]);
   const [restaurants, setRestaurants] = useState<RestaurantType[]>([]);
@@ -22,13 +36,16 @@ export function useNearbyRestaurants() {
       
       // Calculate distances if coordinates are provided
       const restaurantsWithDistance = data.map((restaurant: any) => {
-        let calculatedDistance = 999; // Default large distance
+        let calculatedDistance = undefined; // No distance if coordinates not available
         
         if (latitude && longitude && restaurant.latitude && restaurant.longitude) {
-          // Simple distance calculation (not accurate but works for demo)
-          const dx = restaurant.longitude - longitude;
-          const dy = restaurant.latitude - latitude;
-          calculatedDistance = Math.sqrt(dx * dx + dy * dy) * 111; // rough conversion to km
+          // Use proper Haversine formula for accurate distance calculation
+          calculatedDistance = calculateDistance(
+            latitude, 
+            longitude, 
+            restaurant.latitude, 
+            restaurant.longitude
+          );
         }
         
         // Create a fully typed restaurant object with all required fields
@@ -76,7 +93,7 @@ export function useNearbyRestaurants() {
         setNearbyRestaurants(nearby);
         setRestaurants(nearby);
       } else {
-        // If no location, just set all restaurants
+        // If no location, just set all restaurants (without distance)
         setNearbyRestaurants(restaurantsWithDistance);
         setRestaurants(restaurantsWithDistance);
       }
@@ -118,7 +135,7 @@ export function useNearbyRestaurants() {
           latitude: restaurant.latitude,
           longitude: restaurant.longitude,
           updated_at: restaurant.updated_at,
-          distance: 999, // Default distance when searching
+          distance: undefined, // No distance when searching without location
           
           city: null,
           state: null,
